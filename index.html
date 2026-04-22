@@ -1,0 +1,691 @@
+import { useState, useEffect, useRef } from “react”;
+
+// ─── TRANSLATIONS ────────────────────────────────────────────────
+const T = {
+de: {
+nav: { home: “Start”, program: “Programm”, prices: “Preise”, about: “Über uns”, login: “Anmelden” },
+hero: {
+badge: “Basel · Übertritt 6. Klasse”,
+title: “Der direkteste Weg in den richtigen”,
+titleHighlight: “Leistungszug.”,
+sub: “KI-gestütztes Nachhilfeprogramm mit persönlicher Begleitung durch eine pädagogisch ausgebildete Fachperson. 14 Wochen. Hybrid. Zertifiziert.”,
+cta: “Jetzt starten”,
+ctaSub: “Kostenloser Chatbot-Einstieg”,
+demo: “Demo spielen”,
+},
+stats: [
+{ n: “14”, label: “Wochen Programm” },
+{ n: “3×”, label: “Gewichtung Mathe & Deutsch” },
+{ n: “15+”, label: “Jahre Erfahrung” },
+{ n: “A/E/P”, label: “Züge abgedeckt” },
+],
+howTitle: “So funktioniert Bridge21”,
+steps: [
+{ icon: “💬”, title: “Chatbot-Onboarding”, desc: “In 5 Minuten wird ein vollständiges Kindprofil erstellt. Zielzug, Fächer, Lerntyp – alles automatisch.” },
+{ icon: “🎮”, title: “Spielerisch lernen”, desc: “Interaktive Übungen und Spiele zu Mathe, Deutsch, NMG und Französisch – angepasst an den Lehrplan 21.” },
+{ icon: “📋”, title: “Alle 2 Wochen vor Ort”, desc: “40 Minuten persönlicher Unterricht mit einer ausgebildeten Lehrperson. Feedback fliesst direkt ins Dashboard.” },
+{ icon: “📊”, title: “KI analysiert & anpasst”, desc: “Eltern laden Tests und Hausaufgaben hoch. Die KI erkennt Schwächen und erstellt personalisierte Übungen.” },
+{ icon: “🏅”, title: “Zertifikat zum Abschluss”, desc: “Am Ende erhält jedes Kind ein persönliches Zertifikat mit Würdigung der Leistung und guten Wünschen.” },
+],
+subjectTitle: “Fächer & Gewichtung”,
+subjects: [
+{ name: “Mathematik”, weight: “3×”, color: “#FF6B35”, key: “math” },
+{ name: “Deutsch”, weight: “3×”, color: “#4ECDC4”, key: “de” },
+{ name: “NMG”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
+{ name: “Französisch”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
+{ name: “Englisch”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
+],
+demoTitle: “Mini-Demo: Mathe-Rennen”,
+demoSub: “Beantworte so viele Aufgaben wie möglich in 30 Sekunden!”,
+demoStart: “Spiel starten”,
+demoScore: “Punkte”,
+demoTime: “Sekunden”,
+demoCorrect: “✓ Richtig!”,
+demoWrong: “✗ Falsch”,
+demoEnd: “Spiel beendet!”,
+demoResult: (s) => `Du hast ${s} Aufgaben richtig gelöst!`,
+demoRetry: “Nochmal spielen”,
+pricesTitle: “Einfache Preise”,
+pricesSub: “Keine versteckten Kosten. Alles inklusive.”,
+plans: [
+{
+name: “Standard”,
+price: “CHF 890”,
+period: “Jan – Apr”,
+color: “#4ECDC4”,
+features: [“6× vor Ort (40 Min)”, “Plattform-Zugang”, “KI-Übungen”, “Eltern-Dashboard”, “Abschlusszertifikat”],
+cta: “Jetzt buchen”,
+},
+{
+name: “Premium”,
+price: “CHF 1’290”,
+period: “Jan – Jun”,
+color: “#FF6B35”,
+highlight: true,
+features: [“7× vor Ort (40 Min)”, “Alles aus Standard”, “Prüfungskurs inklusive”, “Intensiv-Coaching”, “Premium-Zertifikat”],
+cta: “Empfohlen wählen”,
+},
+],
+examPlan: {
+name: “Prüfungsvorbereitung”,
+group: “CHF 290”,
+single: “CHF 490”,
+desc: “Mai–Jun · Für Kinder, die die Aufnahmeprüfung ablegen möchten.”,
+features: [“3× vor Ort (90 Min)”, “Kleingruppe (3–5) oder Einzeln”, “Prüfungssimulationen”, “Deutsch & Mathematik”],
+},
+aboutTitle: “Wer steht dahinter?”,
+aboutText: “Eine pädagogisch ausgebildete Fachperson mit über 15 Jahren Erfahrung genau auf der Primarstufe in Basel. Kein Studentenjob. Kein Algorithmus ohne Mensch. Echtes Fachpersonal, das weiss, was Kinder in diesem entscheidenden Moment brauchen.”,
+chatTitle: “Starte jetzt – kostenlos & unverbindlich”,
+chatSub: “Unser Chatbot führt dich in 5 Minuten durch das Onboarding.”,
+footer: “© 2025 Bridge21 · Basel · Alle Rechte vorbehalten”,
+},
+fr: {
+nav: { home: “Accueil”, program: “Programme”, prices: “Tarifs”, about: “À propos”, login: “Connexion” },
+hero: {
+badge: “Bâle · Passage 6ème primaire”,
+title: “Le chemin le plus direct vers le bon”,
+titleHighlight: “niveau scolaire.”,
+sub: “Programme de soutien scolaire assisté par IA avec accompagnement personnalisé d’un enseignant qualifié. 14 semaines. Hybride. Certifié.”,
+cta: “Commencer maintenant”,
+ctaSub: “Inscription gratuite par chatbot”,
+demo: “Jouer à la démo”,
+},
+stats: [
+{ n: “14”, label: “Semaines de programme” },
+{ n: “3×”, label: “Poids maths & allemand” },
+{ n: “15+”, label: “Années d’expérience” },
+{ n: “A/E/P”, label: “Niveaux couverts” },
+],
+howTitle: “Comment fonctionne Bridge21”,
+steps: [
+{ icon: “💬”, title: “Onboarding par chatbot”, desc: “Un profil complet est créé en 5 minutes. Niveau cible, matières, style d’apprentissage – tout automatiquement.” },
+{ icon: “🎮”, title: “Apprendre en jouant”, desc: “Exercices interactifs et jeux en maths, allemand, SHS et français – adaptés au Plan d’études 21.” },
+{ icon: “📋”, title: “En présentiel toutes les 2 semaines”, desc: “40 minutes de cours personnalisé avec un enseignant qualifié. Le retour va directement dans le tableau de bord.” },
+{ icon: “📊”, title: “L’IA analyse et adapte”, desc: “Les parents téléchargent tests et devoirs. L’IA détecte les faiblesses et crée des exercices personnalisés.” },
+{ icon: “🏅”, title: “Certificat à la fin”, desc: “Chaque enfant reçoit un certificat personnel avec reconnaissance de ses efforts et vœux pour la suite.” },
+],
+subjectTitle: “Matières & pondération”,
+subjects: [
+{ name: “Mathématiques”, weight: “3×”, color: “#FF6B35”, key: “math” },
+{ name: “Allemand”, weight: “3×”, color: “#4ECDC4”, key: “de” },
+{ name: “SHS”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
+{ name: “Français”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
+{ name: “Anglais”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
+],
+demoTitle: “Mini-démo: Course de maths”,
+demoSub: “Réponds à un maximum de questions en 30 secondes!”,
+demoStart: “Démarrer”,
+demoScore: “Points”,
+demoTime: “Secondes”,
+demoCorrect: “✓ Correct!”,
+demoWrong: “✗ Faux”,
+demoEnd: “Jeu terminé!”,
+demoResult: (s) => `Tu as résolu ${s} exercices correctement!`,
+demoRetry: “Rejouer”,
+pricesTitle: “Tarifs simples”,
+pricesSub: “Sans frais cachés. Tout inclus.”,
+plans: [
+{ name: “Standard”, price: “CHF 890”, period: “Jan – Avr”, color: “#4ECDC4”, features: [“6× en présentiel (40 min)”, “Accès plateforme”, “Exercices IA”, “Tableau de bord parents”, “Certificat final”], cta: “Réserver” },
+{ name: “Premium”, price: “CHF 1’290”, period: “Jan – Jun”, color: “#FF6B35”, highlight: true, features: [“7× en présentiel (40 min)”, “Tout de Standard”, “Cours de préparation inclus”, “Coaching intensif”, “Certificat Premium”], cta: “Choisir recommandé” },
+],
+examPlan: { name: “Préparation examen”, group: “CHF 290”, single: “CHF 490”, desc: “Mai–Jun · Pour les enfants qui souhaitent passer l’examen d’admission.”, features: [“3× en présentiel (90 min)”, “Petit groupe (3–5) ou individuel”, “Simulations d’examen”, “Allemand & Mathématiques”] },
+aboutTitle: “Qui est derrière Bridge21?”,
+aboutText: “Un enseignant qualifié avec plus de 15 ans d’expérience précisément au niveau primaire à Bâle. Pas un job étudiant. Pas un algorithme sans humain. Un vrai professionnel qui sait ce dont les enfants ont besoin à ce moment décisif.”,
+chatTitle: “Commencez maintenant – gratuitement”,
+chatSub: “Notre chatbot vous guide en 5 minutes.”,
+footer: “© 2025 Bridge21 · Bâle · Tous droits réservés”,
+},
+en: {
+nav: { home: “Home”, program: “Program”, prices: “Prices”, about: “About”, login: “Login” },
+hero: {
+badge: “Basel · 6th Grade Transition”,
+title: “The most direct path to the right”,
+titleHighlight: “performance level.”,
+sub: “AI-powered tutoring program with personal guidance from a qualified educator. 14 weeks. Hybrid. Certified.”,
+cta: “Get started”,
+ctaSub: “Free chatbot onboarding”,
+demo: “Play demo”,
+},
+stats: [
+{ n: “14”, label: “Week program” },
+{ n: “3×”, label: “Math & German weight” },
+{ n: “15+”, label: “Years experience” },
+{ n: “A/E/P”, label: “Levels covered” },
+],
+howTitle: “How Bridge21 works”,
+steps: [
+{ icon: “💬”, title: “Chatbot onboarding”, desc: “A complete child profile is created in 5 minutes. Target level, subjects, learning style – all automatically.” },
+{ icon: “🎮”, title: “Learn by playing”, desc: “Interactive exercises and games in Math, German, NMG and French – aligned with the Lehrplan 21.” },
+{ icon: “📋”, title: “In-person every 2 weeks”, desc: “40 minutes of personal tutoring with a qualified teacher. Feedback flows directly into the dashboard.” },
+{ icon: “📊”, title: “AI analyses & adapts”, desc: “Parents upload tests and homework. The AI detects weaknesses and creates personalized exercises.” },
+{ icon: “🏅”, title: “Certificate at the end”, desc: “Every child receives a personal certificate acknowledging their effort and wishing them well.” },
+],
+subjectTitle: “Subjects & weighting”,
+subjects: [
+{ name: “Mathematics”, weight: “3×”, color: “#FF6B35”, key: “math” },
+{ name: “German”, weight: “3×”, color: “#4ECDC4”, key: “de” },
+{ name: “NMG”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
+{ name: “French”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
+{ name: “English”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
+],
+demoTitle: “Mini-demo: Math Race”,
+demoSub: “Answer as many questions as possible in 30 seconds!”,
+demoStart: “Start game”,
+demoScore: “Points”,
+demoTime: “Seconds”,
+demoCorrect: “✓ Correct!”,
+demoWrong: “✗ Wrong”,
+demoEnd: “Game over!”,
+demoResult: (s) => `You solved ${s} exercises correctly!`,
+demoRetry: “Play again”,
+pricesTitle: “Simple pricing”,
+pricesSub: “No hidden costs. Everything included.”,
+plans: [
+{ name: “Standard”, price: “CHF 890”, period: “Jan – Apr”, color: “#4ECDC4”, features: [“6× in-person (40 min)”, “Platform access”, “AI exercises”, “Parent dashboard”, “Final certificate”], cta: “Book now” },
+{ name: “Premium”, price: “CHF 1’290”, period: “Jan – Jun”, color: “#FF6B35”, highlight: true, features: [“7× in-person (40 min)”, “Everything in Standard”, “Exam prep included”, “Intensive coaching”, “Premium certificate”], cta: “Choose recommended” },
+],
+examPlan: { name: “Exam preparation”, group: “CHF 290”, single: “CHF 490”, desc: “May–Jun · For children who want to take the entrance exam.”, features: [“3× in-person (90 min)”, “Small group (3–5) or individual”, “Exam simulations”, “German & Mathematics”] },
+aboutTitle: “Who’s behind Bridge21?”,
+aboutText: “A qualified educator with over 15 years of experience specifically at primary level in Basel. Not a student job. Not an algorithm without a human. Real expertise that knows what children need at this decisive moment.”,
+chatTitle: “Start now – free & non-binding”,
+chatSub: “Our chatbot guides you through onboarding in 5 minutes.”,
+footer: “© 2025 Bridge21 · Basel · All rights reserved”,
+},
+};
+
+// ─── CHATBOT ─────────────────────────────────────────────────────
+const CHAT_FLOWS = {
+de: [
+{ id: “welcome”, text: “Hallo! 👋 Ich bin dein Bridge21-Assistent. Ich helfe dir in 5 Minuten beim Einstieg.\n\nFür welchen Leistungszug möchtest du dein Kind vorbereiten?”, options: [“A → E (Aufstieg)”, “E → P (Aufstieg)”, “P-Zug halten”, “Noch unsicher”] },
+{ id: “subjects”, text: “Verstanden! In welchen Fächern braucht dein Kind Unterstützung?”, options: [“Mathematik”, “Deutsch”, “Beide (Mathe & Deutsch)”, “Alle Fächer”] },
+{ id: “when”, text: “Wann soll das Programm starten?”, options: [“Januar 2026”, “So früh wie möglich”, “Erst informieren”] },
+{ id: “done”, text: “Super! 🎉 Dein Profil ist fast fertig. Wir kontaktieren dich innerhalb von 24h für ein kostenloses Erstgespräch.\n\nMöchtest du direkt buchen oder noch Fragen stellen?” , options: [“Direkt buchen”, “Erstgespräch vereinbaren”, “Noch Fragen”] },
+],
+fr: [
+{ id: “welcome”, text: “Bonjour! 👋 Je suis ton assistant Bridge21. Je t’aide à démarrer en 5 minutes.\n\nPour quel niveau souhaites-tu préparer ton enfant?”, options: [“A → E (progression)”, “E → P (progression)”, “Maintenir niveau P”, “Pas encore sûr”] },
+{ id: “subjects”, text: “Compris! Dans quelles matières ton enfant a-t-il besoin de soutien?”, options: [“Mathématiques”, “Allemand”, “Les deux”, “Toutes les matières”] },
+{ id: “when”, text: “Quand le programme doit-il commencer?”, options: [“Janvier 2026”, “Le plus tôt possible”, “D’abord s’informer”] },
+{ id: “done”, text: “Super! 🎉 Ton profil est presque prêt. Nous te contactons dans les 24h pour un premier entretien gratuit.”, options: [“Réserver directement”, “Prendre rendez-vous”, “Encore des questions”] },
+],
+en: [
+{ id: “welcome”, text: “Hello! 👋 I’m your Bridge21 assistant. I’ll help you get started in 5 minutes.\n\nWhich performance level would you like to prepare your child for?”, options: [“A → E (upgrade)”, “E → P (upgrade)”, “Maintain P level”, “Not sure yet”] },
+{ id: “subjects”, text: “Got it! Which subjects does your child need support in?”, options: [“Mathematics”, “German”, “Both (Math & German)”, “All subjects”] },
+{ id: “when”, text: “When should the program start?”, options: [“January 2026”, “As soon as possible”, “Just exploring”] },
+{ id: “done”, text: “Great! 🎉 Your profile is almost ready. We’ll contact you within 24h for a free initial consultation.”, options: [“Book directly”, “Schedule consultation”, “More questions”] },
+],
+};
+
+// ─── MATH GAME ───────────────────────────────────────────────────
+function generateQuestion() {
+const ops = [”+”, “-”, “×”];
+const op = ops[Math.floor(Math.random() * ops.length)];
+let a, b, answer;
+if (op === “+”) { a = Math.floor(Math.random() * 50) + 1; b = Math.floor(Math.random() * 50) + 1; answer = a + b; }
+else if (op === “-”) { a = Math.floor(Math.random() * 50) + 10; b = Math.floor(Math.random() * a) + 1; answer = a - b; }
+else { a = Math.floor(Math.random() * 12) + 1; b = Math.floor(Math.random() * 12) + 1; answer = a * b; }
+const wrongs = new Set();
+while (wrongs.size < 3) {
+const w = answer + (Math.floor(Math.random() * 10) - 5);
+if (w !== answer && w > 0) wrongs.add(w);
+}
+const choices = […wrongs, answer].sort(() => Math.random() - 0.5);
+return { question: `${a} ${op} ${b} = ?`, answer, choices };
+}
+
+// ─── MAIN APP ────────────────────────────────────────────────────
+export default function Bridge21() {
+const [lang, setLang] = useState(“de”);
+const [view, setView] = useState(“home”); // home | dashboard-kid | dashboard-parent | backend
+const [chatOpen, setChatOpen] = useState(false);
+const [chatStep, setChatStep] = useState(0);
+const [chatHistory, setChatHistory] = useState([]);
+const [gameState, setGameState] = useState(“idle”); // idle | playing | done
+const [score, setScore] = useState(0);
+const [timeLeft, setTimeLeft] = useState(30);
+const [currentQ, setCurrentQ] = useState(null);
+const [feedback, setFeedback] = useState(null);
+const timerRef = useRef(null);
+const t = T[lang];
+
+// Game logic
+useEffect(() => {
+if (gameState === “playing”) {
+setCurrentQ(generateQuestion());
+timerRef.current = setInterval(() => {
+setTimeLeft(prev => {
+if (prev <= 1) { clearInterval(timerRef.current); setGameState(“done”); return 0; }
+return prev - 1;
+});
+}, 1000);
+}
+return () => clearInterval(timerRef.current);
+}, [gameState]);
+
+function startGame() { setScore(0); setTimeLeft(30); setFeedback(null); setGameState(“playing”); }
+
+function handleAnswer(choice) {
+if (choice === currentQ.answer) {
+setScore(s => s + 1);
+setFeedback(“correct”);
+} else {
+setFeedback(“wrong”);
+}
+setTimeout(() => { setFeedback(null); setCurrentQ(generateQuestion()); }, 600);
+}
+
+// Chat logic
+function startChat() {
+const flow = CHAT_FLOWS[lang];
+setChatHistory([{ role: “bot”, text: flow[0].text, options: flow[0].options }]);
+setChatStep(0);
+setChatOpen(true);
+}
+
+function handleChatOption(opt) {
+const flow = CHAT_FLOWS[lang];
+const newHistory = […chatHistory, { role: “user”, text: opt }];
+const nextStep = chatStep + 1;
+if (nextStep < flow.length) {
+newHistory.push({ role: “bot”, text: flow[nextStep].text, options: flow[nextStep].options });
+setChatStep(nextStep);
+}
+setChatHistory(newHistory);
+}
+
+const styles = {
+app: { fontFamily: “‘Sora’, ‘Nunito’, sans-serif”, background: “#0A0E1A”, color: “#F0F4FF”, minHeight: “100vh”, overflowX: “hidden” },
+nav: { position: “fixed”, top: 0, left: 0, right: 0, zIndex: 100, background: “rgba(10,14,26,0.92)”, backdropFilter: “blur(12px)”, borderBottom: “1px solid rgba(255,255,255,0.07)”, display: “flex”, alignItems: “center”, justifyContent: “space-between”, padding: “0 2rem”, height: “64px” },
+logo: { fontSize: “1.4rem”, fontWeight: 800, color: “#FF6B35”, letterSpacing: “-0.03em”, cursor: “pointer” },
+navLinks: { display: “flex”, gap: “1.5rem”, alignItems: “center” },
+navLink: { color: “rgba(240,244,255,0.7)”, textDecoration: “none”, fontSize: “0.9rem”, cursor: “pointer”, transition: “color 0.2s” },
+langBtn: (active) => ({ background: active ? “#FF6B35” : “transparent”, border: “1px solid rgba(255,107,53,0.4)”, color: active ? “#fff” : “rgba(240,244,255,0.6)”, padding: “3px 10px”, borderRadius: “20px”, cursor: “pointer”, fontSize: “0.8rem”, transition: “all 0.2s” }),
+loginBtn: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, padding: “8px 20px”, borderRadius: “24px”, cursor: “pointer”, fontWeight: 700, fontSize: “0.9rem” },
+hero: { paddingTop: “120px”, paddingBottom: “80px”, textAlign: “center”, position: “relative”, background: “radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,107,53,0.12) 0%, transparent 70%)” },
+badge: { display: “inline-block”, background: “rgba(255,107,53,0.15)”, border: “1px solid rgba(255,107,53,0.3)”, color: “#FF8C42”, padding: “6px 16px”, borderRadius: “20px”, fontSize: “0.85rem”, fontWeight: 600, marginBottom: “1.5rem” },
+h1: { fontSize: “clamp(2.2rem,5vw,3.8rem)”, fontWeight: 800, lineHeight: 1.15, marginBottom: “1.5rem”, letterSpacing: “-0.03em” },
+highlight: { background: “linear-gradient(135deg,#FF6B35,#FFD700)”, WebkitBackgroundClip: “text”, WebkitTextFillColor: “transparent” },
+heroSub: { fontSize: “1.1rem”, color: “rgba(240,244,255,0.65)”, maxWidth: “600px”, margin: “0 auto 2.5rem”, lineHeight: 1.7 },
+btnPrimary: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, padding: “14px 32px”, borderRadius: “32px”, cursor: “pointer”, fontWeight: 700, fontSize: “1rem”, boxShadow: “0 8px 32px rgba(255,107,53,0.4)”, transition: “transform 0.2s,box-shadow 0.2s” },
+btnSecondary: { background: “rgba(255,255,255,0.07)”, color: “#F0F4FF”, border: “1px solid rgba(255,255,255,0.15)”, padding: “14px 32px”, borderRadius: “32px”, cursor: “pointer”, fontWeight: 600, fontSize: “1rem”, transition: “background 0.2s” },
+section: { maxWidth: “1100px”, margin: “0 auto”, padding: “80px 2rem” },
+sectionTitle: { fontSize: “2rem”, fontWeight: 800, textAlign: “center”, marginBottom: “0.5rem”, letterSpacing: “-0.02em” },
+sectionSub: { textAlign: “center”, color: “rgba(240,244,255,0.5)”, marginBottom: “3rem”, fontSize: “1rem” },
+statsRow: { display: “flex”, justifyContent: “center”, gap: “2rem”, flexWrap: “wrap”, padding: “2rem 0”, borderTop: “1px solid rgba(255,255,255,0.07)”, borderBottom: “1px solid rgba(255,255,255,0.07)”, margin: “0 2rem” },
+statItem: { textAlign: “center” },
+statN: { fontSize: “2.2rem”, fontWeight: 800, color: “#FF6B35” },
+statLabel: { fontSize: “0.85rem”, color: “rgba(240,244,255,0.5)”, marginTop: “4px” },
+stepsGrid: { display: “grid”, gridTemplateColumns: “repeat(auto-fit,minmax(200px,1fr))”, gap: “1.5rem” },
+stepCard: { background: “rgba(255,255,255,0.04)”, border: “1px solid rgba(255,255,255,0.08)”, borderRadius: “16px”, padding: “1.5rem”, transition: “border-color 0.2s,transform 0.2s” },
+stepIcon: { fontSize: “2rem”, marginBottom: “0.75rem” },
+stepTitle: { fontWeight: 700, marginBottom: “0.5rem”, fontSize: “1rem” },
+stepDesc: { fontSize: “0.88rem”, color: “rgba(240,244,255,0.55)”, lineHeight: 1.6 },
+subjectsGrid: { display: “flex”, flexWrap: “wrap”, gap: “1rem”, justifyContent: “center” },
+subjectPill: (color) => ({ background: `${color}18`, border: `1.5px solid ${color}44`, borderRadius: “12px”, padding: “1rem 1.5rem”, textAlign: “center”, minWidth: “140px” }),
+subjectName: { fontWeight: 700, fontSize: “1rem” },
+subjectWeight: (color) => ({ color, fontSize: “1.5rem”, fontWeight: 800 }),
+gameBox: { background: “rgba(255,255,255,0.04)”, border: “1px solid rgba(255,107,53,0.2)”, borderRadius: “20px”, padding: “2.5rem”, maxWidth: “500px”, margin: “0 auto”, textAlign: “center” },
+gameQ: { fontSize: “2.5rem”, fontWeight: 800, margin: “1.5rem 0”, color: “#FF8C42” },
+gameChoices: { display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: “0.75rem”, marginTop: “1rem” },
+gameChoice: (fb, correct, thisVal, answer) => ({
+background: fb ? (thisVal === answer ? “rgba(78,205,196,0.2)” : thisVal === correct ? “rgba(255,80,80,0.2)” : “rgba(255,255,255,0.05)”) : “rgba(255,255,255,0.05)”,
+border: `1.5px solid ${fb && thisVal === answer ? "#4ECDC4" : "rgba(255,255,255,0.12)"}`,
+color: “#F0F4FF”, padding: “12px”, borderRadius: “12px”, cursor: “pointer”, fontWeight: 700, fontSize: “1.1rem”, transition: “all 0.15s”
+}),
+timer: { fontSize: “3rem”, fontWeight: 800, color: “#FF6B35” },
+plansGrid: { display: “grid”, gridTemplateColumns: “repeat(auto-fit,minmax(260px,1fr))”, gap: “1.5rem”, marginBottom: “2rem” },
+planCard: (highlight) => ({ background: highlight ? “rgba(255,107,53,0.08)” : “rgba(255,255,255,0.04)”, border: `1.5px solid ${highlight ? "rgba(255,107,53,0.4)" : "rgba(255,255,255,0.08)"}`, borderRadius: “20px”, padding: “2rem”, position: “relative”, overflow: “hidden” }),
+planBadge: { position: “absolute”, top: “1rem”, right: “1rem”, background: “#FF6B35”, color: “#fff”, fontSize: “0.75rem”, fontWeight: 700, padding: “4px 10px”, borderRadius: “12px” },
+planPrice: { fontSize: “2.2rem”, fontWeight: 800, margin: “0.5rem 0” },
+planFeature: { fontSize: “0.88rem”, color: “rgba(240,244,255,0.65)”, padding: “4px 0”, display: “flex”, alignItems: “center”, gap: “0.5rem” },
+examCard: { background: “rgba(150,206,180,0.06)”, border: “1px solid rgba(150,206,180,0.2)”, borderRadius: “20px”, padding: “2rem”, textAlign: “center” },
+aboutSection: { background: “rgba(255,255,255,0.03)”, borderTop: “1px solid rgba(255,255,255,0.07)”, borderBottom: “1px solid rgba(255,255,255,0.07)” },
+aboutInner: { maxWidth: “700px”, margin: “0 auto”, padding: “80px 2rem”, textAlign: “center” },
+chatBtn: { position: “fixed”, bottom: “2rem”, right: “2rem”, zIndex: 200, background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, width: “60px”, height: “60px”, borderRadius: “50%”, fontSize: “1.5rem”, cursor: “pointer”, boxShadow: “0 8px 32px rgba(255,107,53,0.5)”, display: “flex”, alignItems: “center”, justifyContent: “center” },
+chatWindow: { position: “fixed”, bottom: “6rem”, right: “2rem”, width: “340px”, maxHeight: “480px”, background: “#131829”, border: “1px solid rgba(255,107,53,0.3)”, borderRadius: “20px”, display: “flex”, flexDirection: “column”, zIndex: 200, boxShadow: “0 20px 60px rgba(0,0,0,0.5)”, overflow: “hidden” },
+chatHeader: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, padding: “1rem 1.25rem”, display: “flex”, alignItems: “center”, justifyContent: “space-between” },
+chatBody: { flex: 1, overflowY: “auto”, padding: “1rem”, display: “flex”, flexDirection: “column”, gap: “0.75rem” },
+chatBotMsg: { background: “rgba(255,255,255,0.07)”, borderRadius: “12px 12px 12px 4px”, padding: “0.75rem 1rem”, fontSize: “0.88rem”, lineHeight: 1.6, maxWidth: “90%”, whiteSpace: “pre-line” },
+chatUserMsg: { background: “rgba(255,107,53,0.2)”, borderRadius: “12px 12px 4px 12px”, padding: “0.75rem 1rem”, fontSize: “0.88rem”, alignSelf: “flex-end”, maxWidth: “80%” },
+chatOptions: { display: “flex”, flexWrap: “wrap”, gap: “0.5rem”, padding: “0.75rem 1rem”, borderTop: “1px solid rgba(255,255,255,0.07)” },
+chatOption: { background: “rgba(255,107,53,0.1)”, border: “1px solid rgba(255,107,53,0.3)”, color: “#FF8C42”, padding: “6px 12px”, borderRadius: “16px”, cursor: “pointer”, fontSize: “0.82rem”, fontWeight: 600, transition: “background 0.15s” },
+footer: { textAlign: “center”, padding: “2rem”, color: “rgba(240,244,255,0.3)”, fontSize: “0.85rem”, borderTop: “1px solid rgba(255,255,255,0.06)” },
+};
+
+const lastBot = chatHistory.filter(m => m.role === “bot”).slice(-1)[0];
+
+return (
+<div style={styles.app}>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+```
+  {/* NAV */}
+  <nav style={styles.nav}>
+    <div style={styles.logo}>Bridge21</div>
+    <div style={styles.navLinks}>
+      {["home","program","prices","about"].map(k => (
+        <span key={k} style={styles.navLink}>{t.nav[k]}</span>
+      ))}
+      <div style={{ display: "flex", gap: "6px" }}>
+        {["de","fr","en"].map(l => (
+          <button key={l} style={styles.langBtn(lang===l)} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
+        ))}
+      </div>
+      <button style={styles.loginBtn} onClick={() => setView("dashboard-parent")}>{t.nav.login}</button>
+    </div>
+  </nav>
+
+  {view === "home" && (
+    <>
+      {/* HERO */}
+      <section style={styles.hero}>
+        <div style={styles.badge}>{t.hero.badge}</div>
+        <h1 style={styles.h1}>
+          {t.hero.title}<br />
+          <span style={styles.highlight}>{t.hero.titleHighlight}</span>
+        </h1>
+        <p style={styles.heroSub}>{t.hero.sub}</p>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <button style={styles.btnPrimary} onClick={startChat}>{t.hero.cta}<br /><small style={{ fontWeight: 400, fontSize: "0.8rem", opacity: 0.8 }}>{t.hero.ctaSub}</small></button>
+          <button style={styles.btnSecondary} onClick={() => document.getElementById("demo-section").scrollIntoView({ behavior: "smooth" })}>{t.hero.demo}</button>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <div style={styles.statsRow}>
+        {t.stats.map((s, i) => (
+          <div key={i} style={styles.statItem}>
+            <div style={styles.statN}>{s.n}</div>
+            <div style={styles.statLabel}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* HOW IT WORKS */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>{t.howTitle}</h2>
+        <p style={styles.sectionSub}></p>
+        <div style={styles.stepsGrid}>
+          {t.steps.map((s, i) => (
+            <div key={i} style={styles.stepCard}>
+              <div style={styles.stepIcon}>{s.icon}</div>
+              <div style={styles.stepTitle}>{s.title}</div>
+              <div style={styles.stepDesc}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SUBJECTS */}
+      <div style={{ ...styles.section, paddingTop: 0 }}>
+        <h2 style={styles.sectionTitle}>{t.subjectTitle}</h2>
+        <p style={{ ...styles.sectionSub, marginBottom: "2rem" }}>Lehrplan 21 · Basel-Stadt</p>
+        <div style={styles.subjectsGrid}>
+          {t.subjects.map((s, i) => (
+            <div key={i} style={styles.subjectPill(s.color)}>
+              <div style={styles.subjectWeight(s.color)}>{s.weight}</div>
+              <div style={styles.subjectName}>{s.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* DEMO GAME */}
+      <div id="demo-section" style={styles.section}>
+        <h2 style={styles.sectionTitle}>{t.demoTitle}</h2>
+        <p style={styles.sectionSub}>{t.demoSub}</p>
+        <div style={styles.gameBox}>
+          {gameState === "idle" && (
+            <button style={styles.btnPrimary} onClick={startGame}>{t.demoStart}</button>
+          )}
+          {gameState === "playing" && currentQ && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
+                <span>{t.demoScore}: <strong style={{ color: "#4ECDC4" }}>{score}</strong></span>
+                <span style={styles.timer}>{timeLeft}s</span>
+              </div>
+              <div style={styles.gameQ}>{currentQ.question}</div>
+              {feedback && <div style={{ color: feedback === "correct" ? "#4ECDC4" : "#FF6B6B", fontWeight: 700, marginBottom: "0.5rem" }}>{feedback === "correct" ? t.demoCorrect : t.demoWrong}</div>}
+              <div style={styles.gameChoices}>
+                {currentQ.choices.map((c, i) => (
+                  <button key={i} style={styles.gameChoice(feedback, feedback === "wrong" ? null : null, c, currentQ.answer)} onClick={() => !feedback && handleAnswer(c)}>{c}</button>
+                ))}
+              </div>
+            </>
+          )}
+          {gameState === "done" && (
+            <>
+              <div style={{ fontSize: "3rem" }}>🏆</div>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.demoEnd}</h3>
+              <p style={{ color: "#4ECDC4", fontSize: "1.1rem", fontWeight: 700 }}>{t.demoResult(score)}</p>
+              <button style={{ ...styles.btnPrimary, marginTop: "1rem" }} onClick={startGame}>{t.demoRetry}</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* PRICES */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>{t.pricesTitle}</h2>
+        <p style={styles.sectionSub}>{t.pricesSub}</p>
+        <div style={styles.plansGrid}>
+          {t.plans.map((p, i) => (
+            <div key={i} style={styles.planCard(p.highlight)}>
+              {p.highlight && <span style={styles.planBadge}>⭐ Top</span>}
+              <div style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.25rem" }}>{p.name}</div>
+              <div style={styles.planPrice}>{p.price}</div>
+              <div style={{ color: "rgba(240,244,255,0.45)", fontSize: "0.85rem", marginBottom: "1.25rem" }}>{p.period}</div>
+              {p.features.map((f, j) => (
+                <div key={j} style={styles.planFeature}><span style={{ color: "#4ECDC4" }}>✓</span>{f}</div>
+              ))}
+              <button style={{ ...styles.btnPrimary, width: "100%", marginTop: "1.5rem", background: p.highlight ? "linear-gradient(135deg,#FF6B35,#FF8C42)" : "rgba(255,255,255,0.1)" }} onClick={startChat}>{p.cta}</button>
+            </div>
+          ))}
+        </div>
+        <div style={styles.examCard}>
+          <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "#96CEB4", marginBottom: "0.5rem" }}>{t.examPlan.name}</div>
+          <div style={{ display: "flex", gap: "2rem", justifyContent: "center", margin: "0.75rem 0" }}>
+            <div><div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.examPlan.group}</div><div style={{ fontSize: "0.8rem", color: "rgba(240,244,255,0.5)" }}>Kleingruppe</div></div>
+            <div><div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.examPlan.single}</div><div style={{ fontSize: "0.8rem", color: "rgba(240,244,255,0.5)" }}>Einzeln</div></div>
+          </div>
+          <p style={{ color: "rgba(240,244,255,0.55)", fontSize: "0.88rem" }}>{t.examPlan.desc}</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center", marginTop: "0.75rem" }}>
+            {t.examPlan.features.map((f, i) => <span key={i} style={{ background: "rgba(150,206,180,0.1)", border: "1px solid rgba(150,206,180,0.2)", color: "#96CEB4", padding: "4px 12px", borderRadius: "12px", fontSize: "0.82rem" }}>{f}</span>)}
+          </div>
+        </div>
+      </div>
+
+      {/* ABOUT */}
+      <div style={styles.aboutSection}>
+        <div style={styles.aboutInner}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>👩‍🏫</div>
+          <h2 style={styles.sectionTitle}>{t.aboutTitle}</h2>
+          <p style={{ color: "rgba(240,244,255,0.6)", lineHeight: 1.8, marginTop: "1.5rem" }}>{t.aboutText}</p>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div style={{ ...styles.section, textAlign: "center" }}>
+        <h2 style={styles.sectionTitle}>{t.chatTitle}</h2>
+        <p style={styles.sectionSub}>{t.chatSub}</p>
+        <button style={styles.btnPrimary} onClick={startChat}>{t.hero.cta}</button>
+      </div>
+    </>
+  )}
+
+  {/* PARENT DASHBOARD */}
+  {view === "dashboard-parent" && (
+    <div style={{ paddingTop: "80px" }}>
+      <div style={styles.section}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>👪 Eltern-Dashboard</h2>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button style={styles.btnSecondary} onClick={() => setView("dashboard-kid")}>Kind-Ansicht</button>
+            <button style={styles.btnSecondary} onClick={() => setView("backend")}>Lehrer-Backend</button>
+            <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
+          {[["📚","Nächste Session","Di, 14. Jan · 15:00","#FF6B35"],["📊","Aktueller Stand","E-Zug: 68/90 Punkten","#4ECDC4"],["✅","Abgeschlossene Themen","12 von 28","#96CEB4"],["⏱️","Nächste Aufgabe","Brüche · Fällig Freitag","#DDA0DD"]].map(([icon,label,val,color],i)=>(
+            <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}33`, borderRadius: "16px", padding: "1.25rem" }}>
+              <div style={{ fontSize: "1.5rem" }}>{icon}</div>
+              <div style={{ fontSize: "0.82rem", color: "rgba(240,244,255,0.5)", marginTop: "0.5rem" }}>{label}</div>
+              <div style={{ fontWeight: 700, color, marginTop: "0.25rem" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
+            <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>📤 Materialien hochladen</h3>
+            <div style={{ border: "2px dashed rgba(255,107,53,0.3)", borderRadius: "12px", padding: "2rem", textAlign: "center", color: "rgba(240,244,255,0.4)" }}>
+              <div style={{ fontSize: "2rem" }}>📎</div>
+              <p>Test, Hausaufgaben oder Zeugnis hochladen</p>
+              <button style={{ ...styles.btnPrimary, marginTop: "0.75rem", padding: "8px 20px", fontSize: "0.88rem" }}>Datei wählen</button>
+            </div>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
+            <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>🎯 Notensimulator</h3>
+            {[["Mathematik","4.5","3×"],["Deutsch","4.0","3×"],["NMG","5.0","3×"],["Französisch","4.5","1.5×"]].map(([fach,note,gew],i)=>(
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.9rem" }}>
+                <span>{fach}</span>
+                <span style={{ color: "#4ECDC4", fontWeight: 700 }}>{note}</span>
+                <span style={{ color: "rgba(240,244,255,0.4)", fontSize: "0.8rem" }}>{gew}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: "1rem", background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.3)", borderRadius: "8px", padding: "0.75rem", textAlign: "center" }}>
+              <span style={{ color: "#4ECDC4", fontWeight: 700 }}>Hochrechnung: 68.5 Punkte → E-Zug ✓</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: "1.25rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
+          <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>📝 Lehrer-Feedback · Session 3 (2. Jan)</h3>
+          <p style={{ color: "rgba(240,244,255,0.65)", lineHeight: 1.7, fontSize: "0.9rem" }}>Leonie hat heute sehr konzentriert gearbeitet. Bei Brüchen zeigt sie deutliche Fortschritte – die Grundoperationen sitzen nun sicher. Schwerpunkt für die nächsten 2 Wochen: Textaufgaben und das Lesen von Diagrammen in NMG. Die Motivation ist hoch! 🌟</p>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* KID DASHBOARD */}
+  {view === "dashboard-kid" && (
+    <div style={{ paddingTop: "80px" }}>
+      <div style={styles.section}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>🎮 Hallo, Leonie!</h2>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button style={styles.btnSecondary} onClick={() => setView("dashboard-parent")}>Eltern-Ansicht</button>
+            <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: "1rem", marginBottom: "2rem" }}>
+          {[["🔥","7 Tage Streak!","#FF6B35"],["⭐","42 Punkte","#FFD700"],["🏅","3 Badges","#4ECDC4"],["📅","Nächster Termin","#96CEB4"]].map(([icon,label,color],i)=>(
+            <div key={i} style={{ background: `${color}12`, border: `1.5px solid ${color}33`, borderRadius: "16px", padding: "1.25rem", textAlign: "center" }}>
+              <div style={{ fontSize: "2rem" }}>{icon}</div>
+              <div style={{ fontWeight: 700, color, marginTop: "0.5rem" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "2rem" }}>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
+            <h3 style={{ fontWeight: 700, marginBottom: "1rem" }}>📈 Mein Fortschritt</h3>
+            {[["Mathematik", 72, "#FF6B35"],["Deutsch", 58, "#4ECDC4"],["NMG", 85, "#45B7D1"],["Französisch", 44, "#96CEB4"]].map(([fach,pct,color],i)=>(
+              <div key={i} style={{ marginBottom: "0.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", marginBottom: "4px" }}><span>{fach}</span><span style={{ color, fontWeight: 700 }}>{pct}%</span></div>
+                <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "4px", height: "8px" }}>
+                  <div style={{ background: color, width: `${pct}%`, height: "100%", borderRadius: "4px", transition: "width 1s" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
+            <h3 style={{ fontWeight: 700, marginBottom: "1rem" }}>🎮 Spiele spielen</h3>
+            {[["🏎️","Zahlen-Rennen","Mathe","#FF6B35"],["🔍","Lese-Detektiv","Deutsch","#4ECDC4"],["🌍","Quiz-Battle","NMG","#45B7D1"],["🃏","Vokabel-Memory","Französisch","#96CEB4"]].map(([icon,name,fach,color],i)=>(
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "8px", borderRadius: "8px", marginBottom: "0.5rem", cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <span style={{ fontSize: "1.3rem" }}>{icon}</span>
+                <div><div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{name}</div><div style={{ fontSize: "0.78rem", color }}>{fach}</div></div>
+                <span style={{ marginLeft: "auto", color: "rgba(240,244,255,0.4)", fontSize: "0.8rem" }}>▶</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* TEACHER BACKEND */}
+  {view === "backend" && (
+    <div style={{ paddingTop: "80px" }}>
+      <div style={styles.section}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>🏫 Lehrer-Backend</h2>
+          <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
+        </div>
+        {[{name:"Leonie M.", zug:"E→P", fach:"Mathe/Deutsch", next:"14. Jan", progress:72, note:"Brüche verbessert. Textaufgaben noch schwach."},
+          {name:"Noah K.", zug:"A→E", fach:"Alle Fächer", next:"15. Jan", progress:48, note:"Motivation hoch. Deutsch macht grosse Fortschritte."},
+          {name:"Sara B.", zug:"P halten", fach:"NMG/Fr.", next:"16. Jan", progress:88, note:"Sehr selbstständig. Kaum Korrekturbedarf."}
+        ].map((kind,i)=>(
+          <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>{kind.name}</div>
+                <div style={{ fontSize: "0.85rem", color: "rgba(240,244,255,0.5)", marginTop: "2px" }}>Ziel: {kind.zug} · Schwerpunkt: {kind.fach} · Nächste Session: {kind.next}</div>
+              </div>
+              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <div style={{ background: "rgba(78,205,196,0.15)", border: "1px solid rgba(78,205,196,0.3)", color: "#4ECDC4", padding: "4px 12px", borderRadius: "12px", fontWeight: 700, fontSize: "0.88rem" }}>{kind.progress}% Fortschritt</div>
+                <button style={{ ...styles.btnSecondary, fontSize: "0.82rem", padding: "6px 14px" }}>Feedback schreiben</button>
+              </div>
+            </div>
+            <div style={{ marginTop: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "0.75rem", fontSize: "0.88rem", color: "rgba(240,244,255,0.6)" }}>
+              📝 <strong style={{ color: "rgba(240,244,255,0.8)" }}>Randnotiz (privat):</strong> {kind.note}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "0.5rem", marginTop: "0.75rem" }}>
+              {["Mathe","Deutsch","NMG","Französisch"].map((f,j)=>(
+                <div key={j} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "8px", textAlign: "center", fontSize: "0.78rem" }}>
+                  <div style={{ color: "rgba(240,244,255,0.45)" }}>{f}</div>
+                  <div style={{ fontWeight: 700, color: "#4ECDC4", marginTop: "2px" }}>{[4.5,4.0,5.0,4.5][j]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* FOOTER */}
+  <div style={styles.footer}>{t.footer}</div>
+
+  {/* CHATBOT */}
+  <button style={styles.chatBtn} onClick={() => chatOpen ? setChatOpen(false) : startChat()}>
+    {chatOpen ? "✕" : "💬"}
+  </button>
+  {chatOpen && (
+    <div style={styles.chatWindow}>
+      <div style={styles.chatHeader}>
+        <span style={{ fontWeight: 700, color: "#fff" }}>Bridge21 Assistant</span>
+        <button onClick={() => setChatOpen(false)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "1.1rem" }}>✕</button>
+      </div>
+      <div style={styles.chatBody}>
+        {chatHistory.map((msg, i) => (
+          <div key={i} style={msg.role === "bot" ? styles.chatBotMsg : styles.chatUserMsg}>{msg.text}</div>
+        ))}
+      </div>
+      {lastBot?.options && chatStep < CHAT_FLOWS[lang].length - 1 && (
+        <div style={styles.chatOptions}>
+          {lastBot.options.map((opt, i) => (
+            <button key={i} style={styles.chatOption} onClick={() => handleChatOption(opt)}>{opt}</button>
+          ))}
+        </div>
+      )}
+      {chatStep >= CHAT_FLOWS[lang].length - 1 && lastBot?.options && (
+        <div style={styles.chatOptions}>
+          {lastBot.options.map((opt, i) => (
+            <button key={i} style={styles.chatOption} onClick={() => setChatOpen(false)}>{opt}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+```
+
+);
+}
