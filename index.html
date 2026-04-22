@@ -1,687 +1,791 @@
-import { useState, useEffect, useRef } from “react”;
+<!DOCTYPE html>
 
-// ─── TRANSLATIONS ────────────────────────────────────────────────
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SekStep – Fabian Schmidt × Timothy Henry</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#F5F0E8;font-family:'Nunito',sans-serif;}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:#F5F0E8;}
+  ::-webkit-scrollbar-thumb{background:#E8745A;border-radius:3px;}
+  .hover-lift:hover{transform:translateY(-4px)!important;transition:transform 0.2s!important;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .fadein{animation:fadeIn 0.5s ease both;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .float{animation:float 4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const C = {
+sky:”#B8D4E8”, cream:”#F5F0E8”, coral:”#E8745A”, mint:”#7BC8A4”,
+sand:”#E8C97A”, lilac:”#C4A8D4”, navy:”#2C3E5A”, white:”#FEFCF8”, fog:”#D4E4F0”, rose:”#E8A0A0”
+};
+
 const T = {
-de: {
-nav: { home: “Start”, program: “Programm”, prices: “Preise”, about: “Über uns”, login: “Anmelden” },
-hero: {
-badge: “Basel · Übertritt 6. Klasse”,
-title: “Der direkteste Weg in den richtigen”,
-titleHighlight: “Leistungszug.”,
-sub: “KI-gestütztes Nachhilfeprogramm mit persönlicher Begleitung durch eine pädagogisch ausgebildete Fachperson. 14 Wochen. Hybrid. Zertifiziert.”,
-cta: “Jetzt starten”,
-ctaSub: “Kostenloser Chatbot-Einstieg”,
-demo: “Demo spielen”,
+de:{
+nav:[“Start”,“Programm”,“Team”,“Preise”,“Anmelden”],
+heroEyebrow:“Basel · Lehrplan 21 · 6. Klasse”,
+heroWord:“SEK”, heroWord2:“STEP”,
+heroSub:“Das interaktivste Nachhilfeprogramm, das Basel je gesehen hat. Entwickelt von einem echten Pädagogen. Angetrieben von echter KI. Designed für echte Kinder.”,
+heroCta:“Jetzt loslegen”, heroCta2:“Demo spielen”,
+statsLabel:[“Wochen”,“Fächer”,“Jahre Erfahrung”,“Leistungszüge”],
+statsVal:[“14”,“4”,“15+”,“A/E/P”],
+howTitle:“So funktioniert SekStep”, howSub:“Einfach. Clever. Mit Herz.”,
+steps:[
+{icon:“💬”,t:“Chatbot-Onboarding”,d:“Fabians KI-Assistent (gebaut von Timothy, natürlich) erstellt dein Kindprofil in 5 Minuten.”},
+{icon:“🎮”,t:“Spielend lernen”,d:“Mathe-Rennen, Lese-Detektiv, Quiz-Battle – alles am Lehrplan 21 ausgerichtet.”},
+{icon:“📋”,t:“Alle 2 Wochen live”,d:“40 Minuten 1:1 mit Fabian Schmidt. Kein Praktikant. Kein Zufall. 15 Jahre Erfahrung.”},
+{icon:“🤖”,t:“KI analysiert”,d:“Timothy’s Algorithmen lesen hochgeladene Tests und basteln personalisierte Aufgaben.”},
+{icon:“🏅”,t:“Zertifikat”,d:“Handsigniert von Fabian. Digital veredelt von Timothy. Dein Kind verdient beides.”},
+],
+subTitle:“Fächer & Gewichtung”,
+subjects:[
+{n:“Mathematik”,w:“3×”,c:C.coral,e:“🔢”},{n:“Deutsch”,w:“3×”,c:C.mint,e:“📖”},
+{n:“NMG”,w:“3×”,c:C.sky,e:“🌍”},{n:“Französisch”,w:“1.5×”,c:C.lilac,e:“🗼”},
+{n:“Englisch”,w:“1.5×”,c:C.sand,e:“🗣️”},
+],
+demoTitle:“🏎️ Mathe-Rennen”, demoSub:“30 Sekunden. So viele Aufgaben wie möglich. Los!”,
+demoStart:“Starten!”, demoRetry:“Nochmal!”, demoEnd:“Zeit abgelaufen!”,
+teamTitle:“Das Dream-Team”, teamSub:“Zwei Welten. Eine Mission.”,
+fabian:{
+name:“Fabian Schmidt”, role:“Pädagoge & Gründer”, tag:“Der Mensch hinter SekStep”,
+bio:“Fabian unterrichtet seit über 15 Jahren auf der Primarstufe in Basel. Er kennt jeden Trick im Lehrplan 21, jeden Typ Kind und jeden Hebel, der beim Übertritt zählt. SekStep ist sein Lebenswerk – entstanden aus echter pädagogischer Überzeugung, nicht aus einem Business-Plan.”,
+facts:[“15+ Jahre Primarstufe Basel”,“Lehrplan 21 Experte”,“Pädagogisch ausgebildet”,“Jede Session persönlich”],
 },
-stats: [
-{ n: “14”, label: “Wochen Programm” },
-{ n: “3×”, label: “Gewichtung Mathe & Deutsch” },
-{ n: “15+”, label: “Jahre Erfahrung” },
-{ n: “A/E/P”, label: “Züge abgedeckt” },
-],
-howTitle: “So funktioniert Bridge21”,
-steps: [
-{ icon: “💬”, title: “Chatbot-Onboarding”, desc: “In 5 Minuten wird ein vollständiges Kindprofil erstellt. Zielzug, Fächer, Lerntyp – alles automatisch.” },
-{ icon: “🎮”, title: “Spielerisch lernen”, desc: “Interaktive Übungen und Spiele zu Mathe, Deutsch, NMG und Französisch – angepasst an den Lehrplan 21.” },
-{ icon: “📋”, title: “Alle 2 Wochen vor Ort”, desc: “40 Minuten persönlicher Unterricht mit einer ausgebildeten Lehrperson. Feedback fliesst direkt ins Dashboard.” },
-{ icon: “📊”, title: “KI analysiert & anpasst”, desc: “Eltern laden Tests und Hausaufgaben hoch. Die KI erkennt Schwächen und erstellt personalisierte Übungen.” },
-{ icon: “🏅”, title: “Zertifikat zum Abschluss”, desc: “Am Ende erhält jedes Kind ein persönliches Zertifikat mit Würdigung der Leistung und guten Wünschen.” },
-],
-subjectTitle: “Fächer & Gewichtung”,
-subjects: [
-{ name: “Mathematik”, weight: “3×”, color: “#FF6B35”, key: “math” },
-{ name: “Deutsch”, weight: “3×”, color: “#4ECDC4”, key: “de” },
-{ name: “NMG”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
-{ name: “Französisch”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
-{ name: “Englisch”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
-],
-demoTitle: “Mini-Demo: Mathe-Rennen”,
-demoSub: “Beantworte so viele Aufgaben wie möglich in 30 Sekunden!”,
-demoStart: “Spiel starten”,
-demoScore: “Punkte”,
-demoTime: “Sekunden”,
-demoCorrect: “✓ Richtig!”,
-demoWrong: “✗ Falsch”,
-demoEnd: “Spiel beendet!”,
-demoResult: (s) => `Du hast ${s} Aufgaben richtig gelöst!`,
-demoRetry: “Nochmal spielen”,
-pricesTitle: “Einfache Preise”,
-pricesSub: “Keine versteckten Kosten. Alles inklusive.”,
-plans: [
-{
-name: “Standard”,
-price: “CHF 890”,
-period: “Jan – Apr”,
-color: “#4ECDC4”,
-features: [“6× vor Ort (40 Min)”, “Plattform-Zugang”, “KI-Übungen”, “Eltern-Dashboard”, “Abschlusszertifikat”],
-cta: “Jetzt buchen”,
+timothy:{
+name:“Timothy Henry”, role:“AI & Technologie”, tag:“Der Kopf hinter der Maschine”,
+bio:“Timothy baut Dinge, die eigentlich noch nicht existieren sollten. Wenn es um neueste KI-Technologie geht, ist Timothy – wie immer – schon drei Schritte voraus. Er hat die gesamte Plattform-Infrastruktur, den Chatbot und die adaptiven Lernalgorithmen von SekStep entwickelt.”,
+facts:[“AI/ML Architekt”,“Adaptive Lernalgorithmen”,“Chatbot-Entwicklung”,“Real-time Analyse”],
 },
-{
-name: “Premium”,
-price: “CHF 1’290”,
-period: “Jan – Jun”,
-color: “#FF6B35”,
-highlight: true,
-features: [“7× vor Ort (40 Min)”, “Alles aus Standard”, “Prüfungskurs inklusive”, “Intensiv-Coaching”, “Premium-Zertifikat”],
-cta: “Empfohlen wählen”,
+priceTitle:“Klare Preise”, priceSub:“Kein Kleingedrucktes. Kein Abo-Trick.”,
+plans:[
+{name:“Standard”,price:“CHF 890”,period:“Jan – Apr”,hi:false,feats:[“6× live mit Fabian (40 Min)”,“Plattform & Spiele”,“KI-Wochenberichte”,“Eltern-Dashboard”,“Abschlusszertifikat”]},
+{name:“Premium”,price:“CHF 1’290”,period:“Jan – Jun”,hi:true,feats:[“7× live mit Fabian (40 Min)”,“Alles aus Standard”,“Prüfungskurs inklusive”,“Prioritäts-Support”,“Premium-Zertifikat”]},
+],
+exam:{name:“Prüfungsvorbereitung”,g:“CHF 290”,gLabel:“Kleingruppe”,s:“CHF 490”,sLabel:“Einzeln”,d:“Mai–Jun · 3× vor Ort · Für die freiwillige Aufnahmeprüfung · Deutsch & Mathematik”},
+chatWelcome:“Hallo! 👋 Ich bin Fabians KI-Assistent – gebaut von Timothy, natürlich.\n\nFür welchen Leistungszug möchten Sie Ihr Kind vorbereiten?”,
+chatOpts:[[“A → E aufsteigen”,“E → P aufsteigen”,“P-Zug halten”,“Noch unsicher”],[“Mathematik”,“Deutsch”,“Mathe & Deutsch”,“Alle Fächer”],[“Januar 2026”,“So bald wie möglich”,“Erst informieren”]],
+chatMsgs:[“In welchen Fächern braucht Ihr Kind am meisten Unterstützung?”,“Wann soll das Programm starten?”,“Super! 🎉 Fabian meldet sich persönlich innerhalb von 24 Stunden. Versprochen – nicht sein Praktikant.”],
+chatDone:[“Direkt buchen”,“Gespräch vereinbaren”,“Danke, bis dann!”],
+loginTitle:“Willkommen zurück”, loginSub:“Bitte wähle deine Rolle”,
+roles:[“👧 Kind”,“👪 Eltern”,“🏫 Lehrer (Fabian)”],
 },
+fr:{
+nav:[“Accueil”,“Programme”,“Équipe”,“Tarifs”,“Connexion”],
+heroEyebrow:“Bâle · Plan d’études 21 · 6ème primaire”,
+heroWord:“SEK”, heroWord2:“STEP”,
+heroSub:“Le programme de soutien scolaire le plus interactif que Bâle ait jamais vu. Créé par un vrai pédagogue. Propulsé par une vraie IA. Pensé pour de vrais enfants.”,
+heroCta:“Commencer”, heroCta2:“Jouer la démo”,
+statsLabel:[“Semaines”,“Matières”,“Ans d’expérience”,“Niveaux”],
+statsVal:[“14”,“4”,“15+”,“A/E/P”],
+howTitle:“Comment SekStep fonctionne”, howSub:“Simple. Intelligent. Avec cœur.”,
+steps:[
+{icon:“💬”,t:“Onboarding chatbot”,d:“L’assistant IA de Fabian crée le profil de votre enfant en 5 minutes.”},
+{icon:“🎮”,t:“Apprendre en jouant”,d:“Course de maths, détective, quiz – aligné sur le Plan d’études 21.”},
+{icon:“📋”,t:“En direct toutes les 2 semaines”,d:“40 minutes en tête-à-tête avec Fabian Schmidt. 15 ans d’expérience.”},
+{icon:“🤖”,t:“L’IA analyse”,d:“Les algorithmes de Timothy lisent les tests et créent des exercices personnalisés.”},
+{icon:“🏅”,t:“Certificat”,d:“Signé par Fabian. Finalisé par Timothy. Votre enfant mérite les deux.”},
 ],
-examPlan: {
-name: “Prüfungsvorbereitung”,
-group: “CHF 290”,
-single: “CHF 490”,
-desc: “Mai–Jun · Für Kinder, die die Aufnahmeprüfung ablegen möchten.”,
-features: [“3× vor Ort (90 Min)”, “Kleingruppe (3–5) oder Einzeln”, “Prüfungssimulationen”, “Deutsch & Mathematik”],
+subTitle:“Matières & pondération”,
+subjects:[
+{n:“Mathématiques”,w:“3×”,c:C.coral,e:“🔢”},{n:“Allemand”,w:“3×”,c:C.mint,e:“📖”},
+{n:“SHS”,w:“3×”,c:C.sky,e:“🌍”},{n:“Français”,w:“1.5×”,c:C.lilac,e:“🗼”},
+{n:“Anglais”,w:“1.5×”,c:C.sand,e:“🗣️”},
+],
+demoTitle:“🏎️ Course de maths”, demoSub:“30 secondes. Le plus de réponses possible. Allez!”,
+demoStart:“Démarrer!”, demoRetry:“Rejouer!”, demoEnd:“Temps écoulé!”,
+teamTitle:“Le Dream Team”, teamSub:“Deux mondes. Une mission.”,
+fabian:{name:“Fabian Schmidt”,role:“Pédagogue & Fondateur”,tag:“L’humain derrière SekStep”,bio:“Fabian enseigne depuis plus de 15 ans au niveau primaire à Bâle. Il connaît chaque astuce du Plan d’études 21 et chaque levier qui compte pour la transition scolaire. SekStep est son œuvre de vie.”,facts:[“15+ ans primaire Bâle”,“Expert Plan d’études 21”,“Pédagogue qualifié”,“Chaque session personnelle”]},
+timothy:{name:“Timothy Henry”,role:“IA & Technologie”,tag:“Le cerveau derrière la machine”,bio:“Timothy construit des choses qui ne devraient pas encore exister. Quand il s’agit de la dernière technologie IA, Timothy est – comme toujours – trois pas en avance. Il a développé toute l’infrastructure de SekStep.”,facts:[“Architecte AI/ML”,“Analyse temps réel”,“Développement chatbot”,“Algorithmes adaptatifs”]},
+priceTitle:“Tarifs clairs”, priceSub:“Pas de petits caractères. Pas d’abonnement piège.”,
+plans:[
+{name:“Standard”,price:“CHF 890”,period:“Jan – Avr”,hi:false,feats:[“6× en direct avec Fabian”,“Plateforme & jeux”,“Rapports IA hebdo”,“Tableau de bord parents”,“Certificat final”]},
+{name:“Premium”,price:“CHF 1’290”,period:“Jan – Jun”,hi:true,feats:[“7× en direct avec Fabian”,“Tout du Standard”,“Préparation exam incluse”,“Support prioritaire”,“Certificat Premium”]},
+],
+exam:{name:“Préparation examen”,g:“CHF 290”,gLabel:“Petit groupe”,s:“CHF 490”,sLabel:“Individuel”,d:“Mai–Jun · 3× en présentiel · Examen d’admission volontaire · Allemand & Maths”},
+chatWelcome:“Bonjour! 👋 Je suis l’assistant IA de Fabian – construit par Timothy, bien sûr.\n\nPour quel niveau souhaitez-vous préparer votre enfant?”,
+chatOpts:[[“A → E”,“E → P”,“Maintenir P”,“Pas encore sûr”],[“Mathématiques”,“Allemand”,“Les deux”,“Toutes”],[“Janvier 2026”,“Le plus tôt possible”,“Juste m’informer”]],
+chatMsgs:[“Dans quelles matières votre enfant a-t-il le plus besoin d’aide?”,“Quand le programme doit-il commencer?”,“Parfait! 🎉 Fabian vous contactera personnellement dans les 24h.”],
+chatDone:[“Réserver”,“Prendre RDV”,“Merci, à bientôt!”],
+loginTitle:“Bon retour”, loginSub:“Choisissez votre rôle”,
+roles:[“👧 Enfant”,“👪 Parents”,“🏫 Enseignant (Fabian)”],
 },
-aboutTitle: “Wer steht dahinter?”,
-aboutText: “Eine pädagogisch ausgebildete Fachperson mit über 15 Jahren Erfahrung genau auf der Primarstufe in Basel. Kein Studentenjob. Kein Algorithmus ohne Mensch. Echtes Fachpersonal, das weiss, was Kinder in diesem entscheidenden Moment brauchen.”,
-chatTitle: “Starte jetzt – kostenlos & unverbindlich”,
-chatSub: “Unser Chatbot führt dich in 5 Minuten durch das Onboarding.”,
-footer: “© 2025 Bridge21 · Basel · Alle Rechte vorbehalten”,
-},
-fr: {
-nav: { home: “Accueil”, program: “Programme”, prices: “Tarifs”, about: “À propos”, login: “Connexion” },
-hero: {
-badge: “Bâle · Passage 6ème primaire”,
-title: “Le chemin le plus direct vers le bon”,
-titleHighlight: “niveau scolaire.”,
-sub: “Programme de soutien scolaire assisté par IA avec accompagnement personnalisé d’un enseignant qualifié. 14 semaines. Hybride. Certifié.”,
-cta: “Commencer maintenant”,
-ctaSub: “Inscription gratuite par chatbot”,
-demo: “Jouer à la démo”,
-},
-stats: [
-{ n: “14”, label: “Semaines de programme” },
-{ n: “3×”, label: “Poids maths & allemand” },
-{ n: “15+”, label: “Années d’expérience” },
-{ n: “A/E/P”, label: “Niveaux couverts” },
+en:{
+nav:[“Home”,“Program”,“Team”,“Prices”,“Login”],
+heroEyebrow:“Basel · Lehrplan 21 · Grade 6”,
+heroWord:“SEK”, heroWord2:“STEP”,
+heroSub:“The most interactive tutoring program Basel has ever seen. Built by a real educator. Powered by real AI. Designed for real kids.”,
+heroCta:“Get started”, heroCta2:“Play demo”,
+statsLabel:[“Weeks”,“Subjects”,“Years exp.”,“Levels”],
+statsVal:[“14”,“4”,“15+”,“A/E/P”],
+howTitle:“How SekStep works”, howSub:“Simple. Smart. With heart.”,
+steps:[
+{icon:“💬”,t:“Chatbot onboarding”,d:“Fabian’s AI assistant (built by Timothy) builds your child’s profile in 5 minutes.”},
+{icon:“🎮”,t:“Learn by playing”,d:“Math Race, Reading Detective, Quiz Battle – all aligned with Lehrplan 21.”},
+{icon:“📋”,t:“Every 2 weeks live”,d:“40 minutes 1:1 with Fabian Schmidt. Not an intern. 15 years of experience.”},
+{icon:“🤖”,t:“AI analyses”,d:“Timothy’s algorithms read uploaded tests and craft personalised exercises.”},
+{icon:“🏅”,t:“Certificate”,d:“Hand-signed by Fabian. Digitally polished by Timothy. Your child deserves both.”},
 ],
-howTitle: “Comment fonctionne Bridge21”,
-steps: [
-{ icon: “💬”, title: “Onboarding par chatbot”, desc: “Un profil complet est créé en 5 minutes. Niveau cible, matières, style d’apprentissage – tout automatiquement.” },
-{ icon: “🎮”, title: “Apprendre en jouant”, desc: “Exercices interactifs et jeux en maths, allemand, SHS et français – adaptés au Plan d’études 21.” },
-{ icon: “📋”, title: “En présentiel toutes les 2 semaines”, desc: “40 minutes de cours personnalisé avec un enseignant qualifié. Le retour va directement dans le tableau de bord.” },
-{ icon: “📊”, title: “L’IA analyse et adapte”, desc: “Les parents téléchargent tests et devoirs. L’IA détecte les faiblesses et crée des exercices personnalisés.” },
-{ icon: “🏅”, title: “Certificat à la fin”, desc: “Chaque enfant reçoit un certificat personnel avec reconnaissance de ses efforts et vœux pour la suite.” },
+subTitle:“Subjects & weighting”,
+subjects:[
+{n:“Mathematics”,w:“3×”,c:C.coral,e:“🔢”},{n:“German”,w:“3×”,c:C.mint,e:“📖”},
+{n:“NMG”,w:“3×”,c:C.sky,e:“🌍”},{n:“French”,w:“1.5×”,c:C.lilac,e:“🗼”},
+{n:“English”,w:“1.5×”,c:C.sand,e:“🗣️”},
 ],
-subjectTitle: “Matières & pondération”,
-subjects: [
-{ name: “Mathématiques”, weight: “3×”, color: “#FF6B35”, key: “math” },
-{ name: “Allemand”, weight: “3×”, color: “#4ECDC4”, key: “de” },
-{ name: “SHS”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
-{ name: “Français”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
-{ name: “Anglais”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
+demoTitle:“🏎️ Math Race”, demoSub:“30 seconds. As many correct answers as possible. Go!”,
+demoStart:“Start!”, demoRetry:“Play again!”, demoEnd:“Time’s up!”,
+teamTitle:“The Dream Team”, teamSub:“Two worlds. One mission.”,
+fabian:{name:“Fabian Schmidt”,role:“Educator & Founder”,tag:“The human behind SekStep”,bio:“Fabian has been teaching at primary level in Basel for over 15 years. He knows every trick in Lehrplan 21 and every lever that matters for the transition. SekStep is his life’s work.”,facts:[“15+ years primary Basel”,“Lehrplan 21 expert”,“Pedagogically trained”,“Every session personal”]},
+timothy:{name:“Timothy Henry”,role:“AI & Technology”,tag:“The mind behind the machine”,bio:“Timothy builds things that probably shouldn’t exist yet. When it comes to the latest AI technology, Timothy is – as always – three steps ahead. He built SekStep’s entire platform, chatbot, and adaptive algorithms.”,facts:[“AI/ML Architect”,“Real-time learning analysis”,“Chatbot development”,“Adaptive algorithms”]},
+priceTitle:“Clear pricing”, priceSub:“No fine print. No subscription trap.”,
+plans:[
+{name:“Standard”,price:“CHF 890”,period:“Jan – Apr”,hi:false,feats:[“6× live with Fabian (40 min)”,“Platform & games”,“Weekly AI reports”,“Parent dashboard”,“Final certificate”]},
+{name:“Premium”,price:“CHF 1’290”,period:“Jan – Jun”,hi:true,feats:[“7× live with Fabian (40 min)”,“Everything in Standard”,“Exam prep included”,“Priority support”,“Premium certificate”]},
 ],
-demoTitle: “Mini-démo: Course de maths”,
-demoSub: “Réponds à un maximum de questions en 30 secondes!”,
-demoStart: “Démarrer”,
-demoScore: “Points”,
-demoTime: “Secondes”,
-demoCorrect: “✓ Correct!”,
-demoWrong: “✗ Faux”,
-demoEnd: “Jeu terminé!”,
-demoResult: (s) => `Tu as résolu ${s} exercices correctement!`,
-demoRetry: “Rejouer”,
-pricesTitle: “Tarifs simples”,
-pricesSub: “Sans frais cachés. Tout inclus.”,
-plans: [
-{ name: “Standard”, price: “CHF 890”, period: “Jan – Avr”, color: “#4ECDC4”, features: [“6× en présentiel (40 min)”, “Accès plateforme”, “Exercices IA”, “Tableau de bord parents”, “Certificat final”], cta: “Réserver” },
-{ name: “Premium”, price: “CHF 1’290”, period: “Jan – Jun”, color: “#FF6B35”, highlight: true, features: [“7× en présentiel (40 min)”, “Tout de Standard”, “Cours de préparation inclus”, “Coaching intensif”, “Certificat Premium”], cta: “Choisir recommandé” },
-],
-examPlan: { name: “Préparation examen”, group: “CHF 290”, single: “CHF 490”, desc: “Mai–Jun · Pour les enfants qui souhaitent passer l’examen d’admission.”, features: [“3× en présentiel (90 min)”, “Petit groupe (3–5) ou individuel”, “Simulations d’examen”, “Allemand & Mathématiques”] },
-aboutTitle: “Qui est derrière Bridge21?”,
-aboutText: “Un enseignant qualifié avec plus de 15 ans d’expérience précisément au niveau primaire à Bâle. Pas un job étudiant. Pas un algorithme sans humain. Un vrai professionnel qui sait ce dont les enfants ont besoin à ce moment décisif.”,
-chatTitle: “Commencez maintenant – gratuitement”,
-chatSub: “Notre chatbot vous guide en 5 minutes.”,
-footer: “© 2025 Bridge21 · Bâle · Tous droits réservés”,
-},
-en: {
-nav: { home: “Home”, program: “Program”, prices: “Prices”, about: “About”, login: “Login” },
-hero: {
-badge: “Basel · 6th Grade Transition”,
-title: “The most direct path to the right”,
-titleHighlight: “performance level.”,
-sub: “AI-powered tutoring program with personal guidance from a qualified educator. 14 weeks. Hybrid. Certified.”,
-cta: “Get started”,
-ctaSub: “Free chatbot onboarding”,
-demo: “Play demo”,
-},
-stats: [
-{ n: “14”, label: “Week program” },
-{ n: “3×”, label: “Math & German weight” },
-{ n: “15+”, label: “Years experience” },
-{ n: “A/E/P”, label: “Levels covered” },
-],
-howTitle: “How Bridge21 works”,
-steps: [
-{ icon: “💬”, title: “Chatbot onboarding”, desc: “A complete child profile is created in 5 minutes. Target level, subjects, learning style – all automatically.” },
-{ icon: “🎮”, title: “Learn by playing”, desc: “Interactive exercises and games in Math, German, NMG and French – aligned with the Lehrplan 21.” },
-{ icon: “📋”, title: “In-person every 2 weeks”, desc: “40 minutes of personal tutoring with a qualified teacher. Feedback flows directly into the dashboard.” },
-{ icon: “📊”, title: “AI analyses & adapts”, desc: “Parents upload tests and homework. The AI detects weaknesses and creates personalized exercises.” },
-{ icon: “🏅”, title: “Certificate at the end”, desc: “Every child receives a personal certificate acknowledging their effort and wishing them well.” },
-],
-subjectTitle: “Subjects & weighting”,
-subjects: [
-{ name: “Mathematics”, weight: “3×”, color: “#FF6B35”, key: “math” },
-{ name: “German”, weight: “3×”, color: “#4ECDC4”, key: “de” },
-{ name: “NMG”, weight: “3×”, color: “#45B7D1”, key: “nmg” },
-{ name: “French”, weight: “1.5×”, color: “#96CEB4”, key: “fr” },
-{ name: “English”, weight: “1.5×”, color: “#DDA0DD”, key: “en” },
-],
-demoTitle: “Mini-demo: Math Race”,
-demoSub: “Answer as many questions as possible in 30 seconds!”,
-demoStart: “Start game”,
-demoScore: “Points”,
-demoTime: “Seconds”,
-demoCorrect: “✓ Correct!”,
-demoWrong: “✗ Wrong”,
-demoEnd: “Game over!”,
-demoResult: (s) => `You solved ${s} exercises correctly!`,
-demoRetry: “Play again”,
-pricesTitle: “Simple pricing”,
-pricesSub: “No hidden costs. Everything included.”,
-plans: [
-{ name: “Standard”, price: “CHF 890”, period: “Jan – Apr”, color: “#4ECDC4”, features: [“6× in-person (40 min)”, “Platform access”, “AI exercises”, “Parent dashboard”, “Final certificate”], cta: “Book now” },
-{ name: “Premium”, price: “CHF 1’290”, period: “Jan – Jun”, color: “#FF6B35”, highlight: true, features: [“7× in-person (40 min)”, “Everything in Standard”, “Exam prep included”, “Intensive coaching”, “Premium certificate”], cta: “Choose recommended” },
-],
-examPlan: { name: “Exam preparation”, group: “CHF 290”, single: “CHF 490”, desc: “May–Jun · For children who want to take the entrance exam.”, features: [“3× in-person (90 min)”, “Small group (3–5) or individual”, “Exam simulations”, “German & Mathematics”] },
-aboutTitle: “Who’s behind Bridge21?”,
-aboutText: “A qualified educator with over 15 years of experience specifically at primary level in Basel. Not a student job. Not an algorithm without a human. Real expertise that knows what children need at this decisive moment.”,
-chatTitle: “Start now – free & non-binding”,
-chatSub: “Our chatbot guides you through onboarding in 5 minutes.”,
-footer: “© 2025 Bridge21 · Basel · All rights reserved”,
+exam:{name:“Exam Preparation”,g:“CHF 290”,gLabel:“Group”,s:“CHF 490”,sLabel:“Individual”,d:“May–Jun · 3× in-person · Voluntary entrance exam · German & Mathematics”},
+chatWelcome:“Hello! 👋 I’m Fabian’s AI assistant – built by Timothy, of course.\n\nWhich level would you like to prepare your child for?”,
+chatOpts:[[“A → E”,“E → P”,“Keep P level”,“Not sure yet”],[“Mathematics”,“German”,“Both”,“All subjects”],[“January 2026”,“As soon as possible”,“Just exploring”]],
+chatMsgs:[“In which subjects does your child need the most support?”,“When should the program start?”,“Perfect! 🎉 Fabian will personally contact you within 24h. Promised – not his intern.”],
+chatDone:[“Book directly”,“Schedule call”,“Thanks, bye!”],
+loginTitle:“Welcome back”, loginSub:“Please choose your role”,
+roles:[“👧 Child”,“👪 Parent”,“🏫 Teacher (Fabian)”],
 },
 };
 
-// ─── CHATBOT ─────────────────────────────────────────────────────
-const CHAT_FLOWS = {
-de: [
-{ id: “welcome”, text: “Hallo! 👋 Ich bin dein Bridge21-Assistent. Ich helfe dir in 5 Minuten beim Einstieg.\n\nFür welchen Leistungszug möchtest du dein Kind vorbereiten?”, options: [“A → E (Aufstieg)”, “E → P (Aufstieg)”, “P-Zug halten”, “Noch unsicher”] },
-{ id: “subjects”, text: “Verstanden! In welchen Fächern braucht dein Kind Unterstützung?”, options: [“Mathematik”, “Deutsch”, “Beide (Mathe & Deutsch)”, “Alle Fächer”] },
-{ id: “when”, text: “Wann soll das Programm starten?”, options: [“Januar 2026”, “So früh wie möglich”, “Erst informieren”] },
-{ id: “done”, text: “Super! 🎉 Dein Profil ist fast fertig. Wir kontaktieren dich innerhalb von 24h für ein kostenloses Erstgespräch.\n\nMöchtest du direkt buchen oder noch Fragen stellen?” , options: [“Direkt buchen”, “Erstgespräch vereinbaren”, “Noch Fragen”] },
-],
-fr: [
-{ id: “welcome”, text: “Bonjour! 👋 Je suis ton assistant Bridge21. Je t’aide à démarrer en 5 minutes.\n\nPour quel niveau souhaites-tu préparer ton enfant?”, options: [“A → E (progression)”, “E → P (progression)”, “Maintenir niveau P”, “Pas encore sûr”] },
-{ id: “subjects”, text: “Compris! Dans quelles matières ton enfant a-t-il besoin de soutien?”, options: [“Mathématiques”, “Allemand”, “Les deux”, “Toutes les matières”] },
-{ id: “when”, text: “Quand le programme doit-il commencer?”, options: [“Janvier 2026”, “Le plus tôt possible”, “D’abord s’informer”] },
-{ id: “done”, text: “Super! 🎉 Ton profil est presque prêt. Nous te contactons dans les 24h pour un premier entretien gratuit.”, options: [“Réserver directement”, “Prendre rendez-vous”, “Encore des questions”] },
-],
-en: [
-{ id: “welcome”, text: “Hello! 👋 I’m your Bridge21 assistant. I’ll help you get started in 5 minutes.\n\nWhich performance level would you like to prepare your child for?”, options: [“A → E (upgrade)”, “E → P (upgrade)”, “Maintain P level”, “Not sure yet”] },
-{ id: “subjects”, text: “Got it! Which subjects does your child need support in?”, options: [“Mathematics”, “German”, “Both (Math & German)”, “All subjects”] },
-{ id: “when”, text: “When should the program start?”, options: [“January 2026”, “As soon as possible”, “Just exploring”] },
-{ id: “done”, text: “Great! 🎉 Your profile is almost ready. We’ll contact you within 24h for a free initial consultation.”, options: [“Book directly”, “Schedule consultation”, “More questions”] },
-],
-};
-
-// ─── MATH GAME ───────────────────────────────────────────────────
-function generateQuestion() {
-const ops = [”+”, “-”, “×”];
-const op = ops[Math.floor(Math.random() * ops.length)];
-let a, b, answer;
-if (op === “+”) { a = Math.floor(Math.random() * 50) + 1; b = Math.floor(Math.random() * 50) + 1; answer = a + b; }
-else if (op === “-”) { a = Math.floor(Math.random() * 50) + 10; b = Math.floor(Math.random() * a) + 1; answer = a - b; }
-else { a = Math.floor(Math.random() * 12) + 1; b = Math.floor(Math.random() * 12) + 1; answer = a * b; }
-const wrongs = new Set();
-while (wrongs.size < 3) {
-const w = answer + (Math.floor(Math.random() * 10) - 5);
-if (w !== answer && w > 0) wrongs.add(w);
-}
-const choices = […wrongs, answer].sort(() => Math.random() - 0.5);
-return { question: `${a} ${op} ${b} = ?`, answer, choices };
+function genQ(){
+const ops=[”+”,”-”,“×”];
+const op=ops[Math.floor(Math.random()*3)];
+let a,b,ans;
+if(op===”+”){a=Math.floor(Math.random()*50)+1;b=Math.floor(Math.random()*50)+1;ans=a+b;}
+else if(op===”-”){a=Math.floor(Math.random()*50)+10;b=Math.floor(Math.random()*a)+1;ans=a-b;}
+else{a=Math.floor(Math.random()*12)+1;b=Math.floor(Math.random()*12)+1;ans=a*b;}
+const wrong=new Set();
+while(wrong.size<3){const w=ans+(Math.floor(Math.random()*10)-4);if(w!==ans&&w>0)wrong.add(w);}
+return{q:`${a} ${op} ${b}`,ans,choices:[…wrong,ans].sort(()=>Math.random()-0.5)};
 }
 
-// ─── MAIN APP ────────────────────────────────────────────────────
-export default function Bridge21() {
-const [lang, setLang] = useState(“de”);
-const [view, setView] = useState(“home”); // home | dashboard-kid | dashboard-parent | backend
-const [chatOpen, setChatOpen] = useState(false);
-const [chatStep, setChatStep] = useState(0);
-const [chatHistory, setChatHistory] = useState([]);
-const [gameState, setGameState] = useState(“idle”); // idle | playing | done
-const [score, setScore] = useState(0);
-const [timeLeft, setTimeLeft] = useState(30);
-const [currentQ, setCurrentQ] = useState(null);
-const [feedback, setFeedback] = useState(null);
-const timerRef = useRef(null);
-const t = T[lang];
+function App(){
+const [lang,setLang]=useState(“de”);
+const [page,setPage]=useState(“home”);
+const [chatOpen,setChatOpen]=useState(false);
+const [chatStep,setChatStep]=useState(0);
+const [chatHistory,setChatHistory]=useState([]);
+const [chatDone,setChatDone]=useState(false);
+const [gameState,setGameState]=useState(“idle”);
+const [score,setScore]=useState(0);
+const [timeLeft,setTimeLeft]=useState(30);
+const [currentQ,setCurrentQ]=useState(null);
+const [feedback,setFeedback]=useState(null);
+const [hovStep,setHovStep]=useState(null);
+const [hovPlan,setHovPlan]=useState(null);
+const [expandTeam,setExpandTeam]=useState(null);
+const [uploadedFiles,setUploadedFiles]=useState([]);
+const [feedbackText,setFeedbackText]=useState(””);
+const [noteSaved,setNoteSaved]=useState(false);
+const [certFor,setCertFor]=useState(null);
+const [kidName,setKidName]=useState(“Leonie”);
+const timerRef=useRef(null);
+const chatEndRef=useRef(null);
+const t=T[lang];
 
-// Game logic
-useEffect(() => {
-if (gameState === “playing”) {
-setCurrentQ(generateQuestion());
-timerRef.current = setInterval(() => {
-setTimeLeft(prev => {
-if (prev <= 1) { clearInterval(timerRef.current); setGameState(“done”); return 0; }
-return prev - 1;
-});
-}, 1000);
+useEffect(()=>{chatEndRef.current?.scrollIntoView({behavior:“smooth”});},[chatHistory]);
+
+useEffect(()=>{
+if(gameState===“playing”){
+setCurrentQ(genQ());
+timerRef.current=setInterval(()=>{
+setTimeLeft(p=>{if(p<=1){clearInterval(timerRef.current);setGameState(“done”);return 0;}return p-1;});
+},1000);
 }
-return () => clearInterval(timerRef.current);
-}, [gameState]);
+return()=>clearInterval(timerRef.current);
+},[gameState]);
 
-function startGame() { setScore(0); setTimeLeft(30); setFeedback(null); setGameState(“playing”); }
+function startGame(){setScore(0);setTimeLeft(30);setFeedback(null);setGameState(“playing”);}
+function handleAnswer(c){
+if(feedback)return;
+setFeedback(c===currentQ.ans?“ok”:“no”);
+if(c===currentQ.ans)setScore(s=>s+1);
+setTimeout(()=>{setFeedback(null);if(gameState===“playing”)setCurrentQ(genQ());},500);
+}
 
-function handleAnswer(choice) {
-if (choice === currentQ.answer) {
-setScore(s => s + 1);
-setFeedback(“correct”);
+function openChat(){
+setChatHistory([{r:“bot”,text:t.chatWelcome,opts:t.chatOpts[0]}]);
+setChatStep(0);setChatDone(false);setChatOpen(true);
+}
+function chatChoose(opt){
+const nh=[…chatHistory,{r:“user”,text:opt}];
+const ns=chatStep+1;
+if(ns<t.chatOpts.length){
+nh.push({r:“bot”,text:t.chatMsgs[ns-1],opts:t.chatOpts[ns]});
+setChatStep(ns);
 } else {
-setFeedback(“wrong”);
+nh.push({r:“bot”,text:t.chatMsgs[t.chatMsgs.length-1],opts:null});
+setChatDone(true);
 }
-setTimeout(() => { setFeedback(null); setCurrentQ(generateQuestion()); }, 600);
+setChatHistory(nh);
 }
+function handleUpload(e){
+const files=Array.from(e.target.files);
+setUploadedFiles(p=>[…p,…files.map(f=>({name:f.name,size:(f.size/1024).toFixed(1)+“KB”}))]);
+}
+function saveNote(){setNoteSaved(true);setTimeout(()=>setNoteSaved(false),2500);}
 
-// Chat logic
-function startChat() {
-const flow = CHAT_FLOWS[lang];
-setChatHistory([{ role: “bot”, text: flow[0].text, options: flow[0].options }]);
-setChatStep(0);
-setChatOpen(true);
-}
+const lastBot=chatHistory.filter(m=>m.r===“bot”).slice(-1)[0];
 
-function handleChatOption(opt) {
-const flow = CHAT_FLOWS[lang];
-const newHistory = […chatHistory, { role: “user”, text: opt }];
-const nextStep = chatStep + 1;
-if (nextStep < flow.length) {
-newHistory.push({ role: “bot”, text: flow[nextStep].text, options: flow[nextStep].options });
-setChatStep(nextStep);
-}
-setChatHistory(newHistory);
-}
-
-const styles = {
-app: { fontFamily: “‘Sora’, ‘Nunito’, sans-serif”, background: “#0A0E1A”, color: “#F0F4FF”, minHeight: “100vh”, overflowX: “hidden” },
-nav: { position: “fixed”, top: 0, left: 0, right: 0, zIndex: 100, background: “rgba(10,14,26,0.92)”, backdropFilter: “blur(12px)”, borderBottom: “1px solid rgba(255,255,255,0.07)”, display: “flex”, alignItems: “center”, justifyContent: “space-between”, padding: “0 2rem”, height: “64px” },
-logo: { fontSize: “1.4rem”, fontWeight: 800, color: “#FF6B35”, letterSpacing: “-0.03em”, cursor: “pointer” },
-navLinks: { display: “flex”, gap: “1.5rem”, alignItems: “center” },
-navLink: { color: “rgba(240,244,255,0.7)”, textDecoration: “none”, fontSize: “0.9rem”, cursor: “pointer”, transition: “color 0.2s” },
-langBtn: (active) => ({ background: active ? “#FF6B35” : “transparent”, border: “1px solid rgba(255,107,53,0.4)”, color: active ? “#fff” : “rgba(240,244,255,0.6)”, padding: “3px 10px”, borderRadius: “20px”, cursor: “pointer”, fontSize: “0.8rem”, transition: “all 0.2s” }),
-loginBtn: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, padding: “8px 20px”, borderRadius: “24px”, cursor: “pointer”, fontWeight: 700, fontSize: “0.9rem” },
-hero: { paddingTop: “120px”, paddingBottom: “80px”, textAlign: “center”, position: “relative”, background: “radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,107,53,0.12) 0%, transparent 70%)” },
-badge: { display: “inline-block”, background: “rgba(255,107,53,0.15)”, border: “1px solid rgba(255,107,53,0.3)”, color: “#FF8C42”, padding: “6px 16px”, borderRadius: “20px”, fontSize: “0.85rem”, fontWeight: 600, marginBottom: “1.5rem” },
-h1: { fontSize: “clamp(2.2rem,5vw,3.8rem)”, fontWeight: 800, lineHeight: 1.15, marginBottom: “1.5rem”, letterSpacing: “-0.03em” },
-highlight: { background: “linear-gradient(135deg,#FF6B35,#FFD700)”, WebkitBackgroundClip: “text”, WebkitTextFillColor: “transparent” },
-heroSub: { fontSize: “1.1rem”, color: “rgba(240,244,255,0.65)”, maxWidth: “600px”, margin: “0 auto 2.5rem”, lineHeight: 1.7 },
-btnPrimary: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, padding: “14px 32px”, borderRadius: “32px”, cursor: “pointer”, fontWeight: 700, fontSize: “1rem”, boxShadow: “0 8px 32px rgba(255,107,53,0.4)”, transition: “transform 0.2s,box-shadow 0.2s” },
-btnSecondary: { background: “rgba(255,255,255,0.07)”, color: “#F0F4FF”, border: “1px solid rgba(255,255,255,0.15)”, padding: “14px 32px”, borderRadius: “32px”, cursor: “pointer”, fontWeight: 600, fontSize: “1rem”, transition: “background 0.2s” },
-section: { maxWidth: “1100px”, margin: “0 auto”, padding: “80px 2rem” },
-sectionTitle: { fontSize: “2rem”, fontWeight: 800, textAlign: “center”, marginBottom: “0.5rem”, letterSpacing: “-0.02em” },
-sectionSub: { textAlign: “center”, color: “rgba(240,244,255,0.5)”, marginBottom: “3rem”, fontSize: “1rem” },
-statsRow: { display: “flex”, justifyContent: “center”, gap: “2rem”, flexWrap: “wrap”, padding: “2rem 0”, borderTop: “1px solid rgba(255,255,255,0.07)”, borderBottom: “1px solid rgba(255,255,255,0.07)”, margin: “0 2rem” },
-statItem: { textAlign: “center” },
-statN: { fontSize: “2.2rem”, fontWeight: 800, color: “#FF6B35” },
-statLabel: { fontSize: “0.85rem”, color: “rgba(240,244,255,0.5)”, marginTop: “4px” },
-stepsGrid: { display: “grid”, gridTemplateColumns: “repeat(auto-fit,minmax(200px,1fr))”, gap: “1.5rem” },
-stepCard: { background: “rgba(255,255,255,0.04)”, border: “1px solid rgba(255,255,255,0.08)”, borderRadius: “16px”, padding: “1.5rem”, transition: “border-color 0.2s,transform 0.2s” },
-stepIcon: { fontSize: “2rem”, marginBottom: “0.75rem” },
-stepTitle: { fontWeight: 700, marginBottom: “0.5rem”, fontSize: “1rem” },
-stepDesc: { fontSize: “0.88rem”, color: “rgba(240,244,255,0.55)”, lineHeight: 1.6 },
-subjectsGrid: { display: “flex”, flexWrap: “wrap”, gap: “1rem”, justifyContent: “center” },
-subjectPill: (color) => ({ background: `${color}18`, border: `1.5px solid ${color}44`, borderRadius: “12px”, padding: “1rem 1.5rem”, textAlign: “center”, minWidth: “140px” }),
-subjectName: { fontWeight: 700, fontSize: “1rem” },
-subjectWeight: (color) => ({ color, fontSize: “1.5rem”, fontWeight: 800 }),
-gameBox: { background: “rgba(255,255,255,0.04)”, border: “1px solid rgba(255,107,53,0.2)”, borderRadius: “20px”, padding: “2.5rem”, maxWidth: “500px”, margin: “0 auto”, textAlign: “center” },
-gameQ: { fontSize: “2.5rem”, fontWeight: 800, margin: “1.5rem 0”, color: “#FF8C42” },
-gameChoices: { display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: “0.75rem”, marginTop: “1rem” },
-gameChoice: (fb, correct, thisVal, answer) => ({
-background: fb ? (thisVal === answer ? “rgba(78,205,196,0.2)” : thisVal === correct ? “rgba(255,80,80,0.2)” : “rgba(255,255,255,0.05)”) : “rgba(255,255,255,0.05)”,
-border: `1.5px solid ${fb && thisVal === answer ? "#4ECDC4" : "rgba(255,255,255,0.12)"}`,
-color: “#F0F4FF”, padding: “12px”, borderRadius: “12px”, cursor: “pointer”, fontWeight: 700, fontSize: “1.1rem”, transition: “all 0.15s”
-}),
-timer: { fontSize: “3rem”, fontWeight: 800, color: “#FF6B35” },
-plansGrid: { display: “grid”, gridTemplateColumns: “repeat(auto-fit,minmax(260px,1fr))”, gap: “1.5rem”, marginBottom: “2rem” },
-planCard: (highlight) => ({ background: highlight ? “rgba(255,107,53,0.08)” : “rgba(255,255,255,0.04)”, border: `1.5px solid ${highlight ? "rgba(255,107,53,0.4)" : "rgba(255,255,255,0.08)"}`, borderRadius: “20px”, padding: “2rem”, position: “relative”, overflow: “hidden” }),
-planBadge: { position: “absolute”, top: “1rem”, right: “1rem”, background: “#FF6B35”, color: “#fff”, fontSize: “0.75rem”, fontWeight: 700, padding: “4px 10px”, borderRadius: “12px” },
-planPrice: { fontSize: “2.2rem”, fontWeight: 800, margin: “0.5rem 0” },
-planFeature: { fontSize: “0.88rem”, color: “rgba(240,244,255,0.65)”, padding: “4px 0”, display: “flex”, alignItems: “center”, gap: “0.5rem” },
-examCard: { background: “rgba(150,206,180,0.06)”, border: “1px solid rgba(150,206,180,0.2)”, borderRadius: “20px”, padding: “2rem”, textAlign: “center” },
-aboutSection: { background: “rgba(255,255,255,0.03)”, borderTop: “1px solid rgba(255,255,255,0.07)”, borderBottom: “1px solid rgba(255,255,255,0.07)” },
-aboutInner: { maxWidth: “700px”, margin: “0 auto”, padding: “80px 2rem”, textAlign: “center” },
-chatBtn: { position: “fixed”, bottom: “2rem”, right: “2rem”, zIndex: 200, background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, color: “#fff”, border: “none”, width: “60px”, height: “60px”, borderRadius: “50%”, fontSize: “1.5rem”, cursor: “pointer”, boxShadow: “0 8px 32px rgba(255,107,53,0.5)”, display: “flex”, alignItems: “center”, justifyContent: “center” },
-chatWindow: { position: “fixed”, bottom: “6rem”, right: “2rem”, width: “340px”, maxHeight: “480px”, background: “#131829”, border: “1px solid rgba(255,107,53,0.3)”, borderRadius: “20px”, display: “flex”, flexDirection: “column”, zIndex: 200, boxShadow: “0 20px 60px rgba(0,0,0,0.5)”, overflow: “hidden” },
-chatHeader: { background: “linear-gradient(135deg,#FF6B35,#FF8C42)”, padding: “1rem 1.25rem”, display: “flex”, alignItems: “center”, justifyContent: “space-between” },
-chatBody: { flex: 1, overflowY: “auto”, padding: “1rem”, display: “flex”, flexDirection: “column”, gap: “0.75rem” },
-chatBotMsg: { background: “rgba(255,255,255,0.07)”, borderRadius: “12px 12px 12px 4px”, padding: “0.75rem 1rem”, fontSize: “0.88rem”, lineHeight: 1.6, maxWidth: “90%”, whiteSpace: “pre-line” },
-chatUserMsg: { background: “rgba(255,107,53,0.2)”, borderRadius: “12px 12px 4px 12px”, padding: “0.75rem 1rem”, fontSize: “0.88rem”, alignSelf: “flex-end”, maxWidth: “80%” },
-chatOptions: { display: “flex”, flexWrap: “wrap”, gap: “0.5rem”, padding: “0.75rem 1rem”, borderTop: “1px solid rgba(255,255,255,0.07)” },
-chatOption: { background: “rgba(255,107,53,0.1)”, border: “1px solid rgba(255,107,53,0.3)”, color: “#FF8C42”, padding: “6px 12px”, borderRadius: “16px”, cursor: “pointer”, fontSize: “0.82rem”, fontWeight: 600, transition: “background 0.15s” },
-footer: { textAlign: “center”, padding: “2rem”, color: “rgba(240,244,255,0.3)”, fontSize: “0.85rem”, borderTop: “1px solid rgba(255,255,255,0.06)” },
+const S={
+nav:{position:“fixed”,top:0,left:0,right:0,zIndex:100,background:“rgba(245,240,232,0.95)”,backdropFilter:“blur(12px)”,borderBottom:`2px solid ${C.fog}`,display:“flex”,alignItems:“center”,justifyContent:“space-between”,padding:“0 2rem”,height:“66px”,boxShadow:“0 2px 16px rgba(44,62,90,0.07)”},
+logo:{fontSize:“1.6rem”,fontWeight:900,color:C.coral,letterSpacing:”-0.04em”,cursor:“pointer”},
+logoSub:{fontSize:“0.6rem”,fontWeight:700,color:C.navy,opacity:0.4,letterSpacing:“0.08em”,display:“block”,marginTop:”-5px”},
+navBtn:(a)=>({background:a?`${C.coral}18`:“transparent”,color:a?C.coral:C.navy,border:“none”,padding:“7px 14px”,borderRadius:“20px”,cursor:“pointer”,fontWeight:700,fontSize:“0.88rem”,transition:“all 0.18s”}),
+langBtn:(a)=>({background:a?C.coral:“transparent”,color:a?”#fff”:C.navy,border:`2px solid ${a?C.coral:C.fog}`,padding:“4px 10px”,borderRadius:“14px”,cursor:“pointer”,fontSize:“0.76rem”,fontWeight:800,transition:“all 0.18s”}),
+loginBtn:{background:C.navy,color:”#fff”,border:“none”,padding:“9px 20px”,borderRadius:“22px”,cursor:“pointer”,fontWeight:800,fontSize:“0.88rem”,boxShadow:`0 4px 14px ${C.navy}33`,transition:“transform 0.15s”},
+hero:{minHeight:“100vh”,background:`linear-gradient(170deg,${C.sky} 0%,${C.fog} 50%,${C.cream} 100%)`,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,textAlign:“center”,padding:“100px 2rem 60px”,position:“relative”,overflow:“hidden”},
+btnPrimary:{background:C.coral,color:”#fff”,border:“none”,padding:“14px 34px”,borderRadius:“30px”,cursor:“pointer”,fontWeight:800,fontSize:“1rem”,boxShadow:`0 8px 26px ${C.coral}50`,transition:“all 0.18s”},
+btnSec:{background:“transparent”,color:C.navy,border:`2.5px solid ${C.navy}44`,padding:“12px 28px”,borderRadius:“30px”,cursor:“pointer”,fontWeight:700,fontSize:“1rem”,transition:“all 0.18s”},
+section:{maxWidth:“1060px”,margin:“0 auto”,padding:“80px 2rem”},
+secTitle:{fontSize:“2rem”,fontWeight:900,textAlign:“center”,marginBottom:“0.4rem”,letterSpacing:”-0.02em”,color:C.navy},
+secSub:{textAlign:“center”,color:C.navy,opacity:0.48,marginBottom:“2.5rem”,fontWeight:600,fontSize:“0.95rem”},
+card:(border)=>({background:C.white,border:`2px solid ${border||C.fog}`,borderRadius:“20px”,padding:“1.5rem”,boxShadow:“0 4px 16px rgba(44,62,90,0.05)”}),
+tag:(c)=>({background:`${c}22`,color:c,fontWeight:800,fontSize:“0.76rem”,padding:“3px 10px”,borderRadius:“12px”,display:“inline-block”}),
+chatWin:{position:“fixed”,bottom:“6rem”,right:“1.5rem”,width:“340px”,maxHeight:“500px”,background:C.white,border:`2.5px solid ${C.coral}44`,borderRadius:“22px”,display:“flex”,flexDirection:“column”,zIndex:300,boxShadow:“0 20px 60px rgba(44,62,90,0.2)”,overflow:“hidden”},
+dash:{paddingTop:“80px”,minHeight:“100vh”,background:C.cream},
 };
 
-const lastBot = chatHistory.filter(m => m.role === “bot”).slice(-1)[0];
+// ── LOGIN
+if(page===“login”) return (
+<div style={{minHeight:“100vh”,background:`linear-gradient(150deg,${C.sky},${C.cream})`,display:“flex”,alignItems:“center”,justifyContent:“center”,fontFamily:”‘Nunito’,sans-serif”}}>
+<div style={{textAlign:“center”,maxWidth:“400px”,padding:“2rem”,width:“100%”}}>
+<div style={{fontSize:“3rem”,fontWeight:900,color:C.coral,marginBottom:“0.2rem”,cursor:“pointer”}} onClick={()=>setPage(“home”)}>SekStep</div>
+<div style={{fontWeight:700,color:C.navy,opacity:0.45,marginBottom:“2rem”,fontSize:“0.9rem”}}>{t.loginTitle}</div>
+<div style={{background:C.white,borderRadius:“24px”,padding:“2rem”,boxShadow:`0 12px 40px ${C.sky}66`}}>
+<p style={{fontWeight:700,color:C.navy,marginBottom:“1.25rem”}}>{t.loginSub}</p>
+{t.roles.map((r,i)=>(
+<button key={i} onClick={()=>setPage([“kid”,“parent”,“teacher”][i])}
+style={{display:“block”,width:“100%”,marginBottom:“0.75rem”,…S.btnPrimary,background:[C.mint,C.sand,C.coral][i],boxShadow:“none”,textAlign:“center”}}>
+{r}
+</button>
+))}
+<button style={{…S.btnSec,width:“100%”,marginTop:“0.5rem”}} onClick={()=>setPage(“home”)}>← Zurück</button>
+</div>
+</div>
+</div>
+);
 
+// ── KID DASHBOARD
+if(page===“kid”) return (
+<div style={{…S.dash,fontFamily:”‘Nunito’,sans-serif”}}>
+<nav style={S.nav}>
+<div style={{cursor:“pointer”}} onClick={()=>setPage(“home”)}><div style={S.logo}>SekStep</div></div>
+<div style={{display:“flex”,gap:“0.75rem”,alignItems:“center”}}>
+<span style={{fontWeight:700,color:C.mint,fontSize:“0.88rem”}}>👧 {kidName}</span>
+<button style={{…S.btnSec,padding:“7px 14px”,fontSize:“0.82rem”}} onClick={()=>setPage(“home”)}>← Home</button>
+</div>
+</nav>
+<div style={{maxWidth:“1060px”,margin:“0 auto”,padding:“2.5rem 2rem”}}>
+<div style={{display:“flex”,alignItems:“center”,gap:“1rem”,marginBottom:“2rem”,flexWrap:“wrap”}}>
+<div style={{fontSize:“2.5rem”}}>👋</div>
+<div>
+<div style={{fontSize:“1.7rem”,fontWeight:900,color:C.navy}}>Hallo, 
+<input value={kidName} onChange={e=>setKidName(e.target.value)}
+style={{border:`2px solid ${C.coral}55`,borderRadius:“10px”,padding:“2px 10px”,fontSize:“1.5rem”,fontWeight:900,color:C.coral,background:“transparent”,width:“140px”,fontFamily:“inherit”,outline:“none”}}/>!
+</div>
+<div style={{color:C.navy,opacity:0.5,fontWeight:600,fontSize:“0.88rem”,marginTop:“4px”}}>🔥 7 Tage Streak · ⭐ 42 Punkte · 🏅 3 Badges</div>
+</div>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(auto-fit,minmax(260px,1fr))”,gap:“1.25rem”,marginBottom:“1.5rem”}}>
+<div style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“1.25rem”,color:C.navy}}>📈 Mein Fortschritt</div>
+{[[“Mathematik”,72,C.coral],[“Deutsch”,58,C.mint],[“NMG”,85,C.sky],[“Französisch”,44,C.lilac]].map(([f,p,c],i)=>(
+<div key={i} style={{marginBottom:“0.85rem”}}>
+<div style={{display:“flex”,justifyContent:“space-between”,fontSize:“0.86rem”,fontWeight:700,marginBottom:“5px”}}>
+<span>{f}</span><span style={{color:c}}>{p}%</span>
+</div>
+<div style={{background:C.fog,borderRadius:“6px”,height:“10px”,overflow:“hidden”}}>
+<div style={{background:c,width:`${p}%`,height:“100%”,borderRadius:“6px”,transition:“width 1.2s ease”}}/>
+</div>
+</div>
+))}
+</div>
+<div style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“1.25rem”,color:C.navy}}>🎮 Spiele</div>
+{[[“🏎️”,“Zahlen-Rennen”,“Mathe”,C.coral],[“🔍”,“Lese-Detektiv”,“Deutsch”,C.mint],[“🌍”,“Quiz-Battle”,“NMG”,C.sky],[“🃏”,“Vokabel-Memory”,“Français”,C.lilac]].map(([ic,nm,f,c],i)=>(
+<div key={i} onClick={()=>document.getElementById(“game-section”).scrollIntoView({behavior:“smooth”})}
+style={{display:“flex”,alignItems:“center”,gap:“0.75rem”,padding:“9px 12px”,borderRadius:“12px”,marginBottom:“0.5rem”,cursor:“pointer”,background:C.cream,border:`2px solid ${C.fog}`,transition:“border-color 0.15s”}}
+onMouseEnter={e=>e.currentTarget.style.borderColor=c}
+onMouseLeave={e=>e.currentTarget.style.borderColor=C.fog}>
+<span style={{fontSize:“1.3rem”}}>{ic}</span>
+<div><div style={{fontWeight:700,fontSize:“0.9rem”}}>{nm}</div><div style={{fontSize:“0.76rem”,color:c,fontWeight:700}}>{f}</div></div>
+<span style={{marginLeft:“auto”,color:C.fog,fontWeight:900}}>▶</span>
+</div>
+))}
+</div>
+</div>
+<div id="game-section" style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“1.25rem”,color:C.navy}}>🏎️ Mathe-Rennen spielen</div>
+<div style={{maxWidth:“400px”,margin:“0 auto”,textAlign:“center”}}>
+{gameState===“idle”&&<button style={S.btnPrimary} onClick={startGame}>{t.demoStart}</button>}
+{gameState===“playing”&&currentQ&&<>
+<div style={{display:“flex”,justifyContent:“space-between”,fontWeight:800,marginBottom:“0.75rem”}}>
+<span style={{color:C.mint,fontSize:“1.1rem”}}>⭐ {score}</span>
+<span style={{fontSize:“2rem”,fontWeight:900,color:timeLeft<=10?C.rose:C.coral}}>{timeLeft}s</span>
+</div>
+<div style={{background:`${C.coral}15`,borderRadius:“8px”,height:“6px”,marginBottom:“1.5rem”}}>
+<div style={{background:C.coral,width:`${(timeLeft/30)*100}%`,height:“100%”,borderRadius:“8px”,transition:“width 1s linear”}}/>
+</div>
+<div style={{fontSize:“2.8rem”,fontWeight:900,color:C.coral,margin:“1rem 0”,letterSpacing:”-0.02em”}}>{currentQ.q} = ?</div>
+{feedback&&<div style={{fontWeight:900,color:feedback===“ok”?C.mint:C.rose,marginBottom:“0.4rem”,fontSize:“1rem”}}>{feedback===“ok”?“✓ Richtig!”:“✗ Falsch”}</div>}
+<div style={{display:“grid”,gridTemplateColumns:“1fr 1fr”,gap:“0.75rem”}}>
+{currentQ.choices.map((c,i)=>(
+<button key={i} onClick={()=>handleAnswer(c)}
+style={{background:feedback?(c===currentQ.ans?`${C.mint}33`:`${C.rose}22`):C.cream,border:`2.5px solid ${feedback?(c===currentQ.ans?C.mint:C.rose):C.fog}`,color:C.navy,padding:“13px”,borderRadius:“13px”,cursor:“pointer”,fontWeight:800,fontSize:“1.2rem”,transition:“all 0.15s”}}>
+{c}
+</button>
+))}
+</div>
+</>}
+{gameState===“done”&&<>
+<div style={{fontSize:“2.5rem”}}>🏆</div>
+<div style={{fontSize:“1.5rem”,fontWeight:900,color:C.coral,margin:“0.5rem 0”}}>{t.demoEnd}</div>
+<div style={{fontWeight:700,color:C.mint}}>+{score} Punkte!</div>
+{score>=10&&<div style={{color:C.coral,fontWeight:700,fontSize:“0.88rem”,marginTop:“0.25rem”}}>🔥 Mega!</div>}
+<button style={{…S.btnPrimary,marginTop:“1.25rem”}} onClick={startGame}>{t.demoRetry}</button>
+</>}
+</div>
+</div>
+</div>
+</div>
+);
+
+// ── PARENT DASHBOARD
+if(page===“parent”) return (
+<div style={{…S.dash,fontFamily:”‘Nunito’,sans-serif”}}>
+<nav style={S.nav}>
+<div style={{cursor:“pointer”}} onClick={()=>setPage(“home”)}><div style={S.logo}>SekStep</div></div>
+<div style={{display:“flex”,gap:“0.75rem”,alignItems:“center”}}>
+<span style={{fontWeight:700,color:C.sand,fontSize:“0.88rem”}}>👪 Eltern-Dashboard</span>
+<button style={{…S.btnSec,padding:“7px 14px”,fontSize:“0.82rem”}} onClick={()=>setPage(“home”)}>← Home</button>
+</div>
+</nav>
+<div style={{maxWidth:“1060px”,margin:“0 auto”,padding:“2.5rem 2rem”}}>
+<div style={{fontSize:“1.7rem”,fontWeight:900,color:C.navy,marginBottom:“0.25rem”}}>👪 Eltern-Dashboard</div>
+<div style={{color:C.navy,opacity:0.45,fontWeight:600,marginBottom:“2rem”,fontSize:“0.9rem”}}>Alles im Blick. Immer.</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(auto-fit,minmax(200px,1fr))”,gap:“1rem”,marginBottom:“1.5rem”}}>
+{[[C.coral,“📅”,“Nächste Session”,“Di 14. Jan · 15:00”],[C.mint,“📊”,“Stand”,“68/90 → E-Zug ✓”],[C.sky,“✅”,“Themen”,“12 / 28 done”],[C.lilac,“⏱️”,“Aufgabe”,“Brüche · Fr.”]].map(([c,ic,lb,vl],i)=>(
+<div key={i} style={{…S.card(`${c}44`),background:`${c}0C`}}>
+<div style={{fontSize:“1.4rem”}}>{ic}</div>
+<div style={{fontSize:“0.76rem”,fontWeight:700,color:C.navy,opacity:0.45,marginTop:“0.4rem”,textTransform:“uppercase”,letterSpacing:“0.05em”}}>{lb}</div>
+<div style={{fontWeight:800,color:c,marginTop:“0.25rem”}}>{vl}</div>
+</div>
+))}
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(auto-fit,minmax(280px,1fr))”,gap:“1.25rem”,marginBottom:“1.25rem”}}>
+<div style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“1rem”}}>📤 Materialien hochladen</div>
+<label style={{display:“block”,border:`2.5px dashed ${C.coral}44`,borderRadius:“14px”,padding:“1.5rem”,textAlign:“center”,cursor:“pointer”,background:`${C.coral}06`,color:C.navy,opacity:0.65,fontWeight:700}}>
+<div style={{fontSize:“1.8rem”,marginBottom:“0.4rem”}}>📎</div>
+<div style={{fontSize:“0.88rem”}}>Test, Hausaufgaben, Zeugnis</div>
+<div style={{…S.btnPrimary,display:“inline-block”,marginTop:“0.75rem”,padding:“8px 18px”,fontSize:“0.84rem”}}>Datei wählen</div>
+<input type=“file” multiple style={{display:“none”}} onChange={handleUpload}/>
+</label>
+{uploadedFiles.length>0&&<div style={{marginTop:“0.75rem”}}>
+{uploadedFiles.map((f,i)=>(
+<div key={i} style={{display:“flex”,justifyContent:“space-between”,fontSize:“0.8rem”,padding:“5px 10px”,background:C.fog,borderRadius:“8px”,marginBottom:“4px”,fontWeight:600}}>
+<span>📄 {f.name}</span><span style={{color:C.mint,fontWeight:800}}>✓ {f.size}</span>
+</div>
+))}
+</div>}
+</div>
+<div style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“1rem”}}>🎯 Notensimulator</div>
+{[[“Mathematik”,“4.5”,“3×”,C.coral],[“Deutsch”,“4.0”,“3×”,C.mint],[“NMG”,“5.0”,“3×”,C.sky],[“Französisch”,“4.5”,“1.5×”,C.lilac]].map(([f,n,g,c],i)=>(
+<div key={i} style={{display:“flex”,justifyContent:“space-between”,padding:“7px 0”,borderBottom:`2px solid ${C.fog}`,fontSize:“0.88rem”,fontWeight:700}}>
+<span>{f}</span><span style={{color:c}}>{n}</span><span style={{color:C.navy,opacity:0.35,fontSize:“0.78rem”}}>{g}</span>
+</div>
+))}
+<div style={{marginTop:“1rem”,background:`${C.mint}18`,border:`2px solid ${C.mint}44`,borderRadius:“10px”,padding:“0.75rem”,textAlign:“center”,fontWeight:800,color:C.mint,fontSize:“0.88rem”}}>
+68.5 Punkte → E-Zug ✓
+</div>
+</div>
+</div>
+<div style={S.card()}>
+<div style={{fontWeight:800,fontSize:“1rem”,marginBottom:“0.75rem”}}>📝 Lehrer-Feedback · Session 3 · 2. Jan</div>
+<p style={{color:C.navy,opacity:0.65,lineHeight:1.75,fontSize:“0.9rem”,fontWeight:600}}>
+Leonie hat heute sehr konzentriert gearbeitet. Bei Brüchen zeigt sie deutliche Fortschritte – die Grundoperationen sitzen nun sicher. Schwerpunkt nächste 2 Wochen: Textaufgaben und Diagramme in NMG. Die Motivation ist hoch! 🌟
+</p>
+<div style={{marginTop:“0.75rem”,display:“flex”,gap:“0.5rem”,flexWrap:“wrap”}}>
+<span style={S.tag(C.mint)}>Mathe +</span>
+<span style={S.tag(C.sky)}>NMG Fokus</span>
+<span style={S.tag(C.coral)}>Motivation ↑</span>
+</div>
+</div>
+</div>
+</div>
+);
+
+// ── TEACHER BACKEND
+if(page===“teacher”) return (
+<div style={{…S.dash,fontFamily:”‘Nunito’,sans-serif”}}>
+<nav style={S.nav}>
+<div style={{cursor:“pointer”}} onClick={()=>setPage(“home”)}><div style={S.logo}>SekStep</div></div>
+<div style={{display:“flex”,gap:“0.75rem”,alignItems:“center”}}>
+<span style={{fontWeight:700,color:C.coral,fontSize:“0.88rem”}}>🏫 Fabian Schmidt</span>
+<button style={{…S.btnSec,padding:“7px 14px”,fontSize:“0.82rem”}} onClick={()=>setPage(“home”)}>← Home</button>
+</div>
+</nav>
+<div style={{maxWidth:“1060px”,margin:“0 auto”,padding:“2.5rem 2rem”}}>
+<div style={{fontSize:“1.7rem”,fontWeight:900,color:C.navy,marginBottom:“0.25rem”}}>🏫 Lehrer-Backend</div>
+<div style={{color:C.navy,opacity:0.45,fontWeight:600,marginBottom:“2rem”,fontSize:“0.9rem”}}>Deine Kinder. Dein Überblick.</div>
+{[
+{name:“Leonie M.”,zug:“E → P”,fach:“Mathe / Deutsch”,next:“14. Jan”,prog:72,notes:[4.5,4.0,5.0,4.5],privateNote:“Brüche verbessert – Textaufgaben noch üben. Elterngespräch einplanen.”},
+{name:“Noah K.”,zug:“A → E”,fach:“Alle Fächer”,next:“15. Jan”,prog:48,notes:[3.5,4.0,4.5,3.5],privateNote:“Motivation hoch! Deutsch macht grosse Sprünge. Mutter sehr engagiert.”},
+{name:“Sara B.”,zug:“P halten”,fach:“NMG / Français”,next:“16. Jan”,prog:88,notes:[5.0,4.5,5.5,5.0],privateNote:“Sehr selbstständig. Kaum Korrekturbedarf. Evtl. Bonusaufgaben?”},
+].map((k,i)=>(
+<div key={i} style={{…S.card(),marginBottom:“1.25rem”}}>
+<div style={{display:“flex”,justifyContent:“space-between”,alignItems:“flex-start”,flexWrap:“wrap”,gap:“1rem”,marginBottom:“1rem”}}>
+<div>
+<div style={{fontWeight:900,fontSize:“1.1rem”,color:C.navy}}>{k.name}</div>
+<div style={{fontSize:“0.82rem”,fontWeight:600,color:C.navy,opacity:0.45,marginTop:“2px”}}>Ziel: {k.zug} · {k.fach} · Nächste Session: {k.next}</div>
+</div>
+<div style={{display:“flex”,gap:“0.75rem”,alignItems:“center”,flexWrap:“wrap”}}>
+<span style={S.tag(C.mint)}>{k.prog}% Fortschritt</span>
+<button style={{…S.btnPrimary,padding:“7px 16px”,fontSize:“0.8rem”,background:C.navy}} onClick={()=>setCertFor(k.name)}>🏅 Zertifikat</button>
+</div>
+</div>
+<div style={{display:“grid”,gridTemplateColumns:“repeat(4,1fr)”,gap:“0.5rem”,marginBottom:“1rem”}}>
+{[“Mathe”,“Deutsch”,“NMG”,“Franz.”].map((f,j)=>(
+<div key={j} style={{background:C.cream,borderRadius:“10px”,padding:“8px”,textAlign:“center”,border:`2px solid ${C.fog}`}}>
+<div style={{fontSize:“0.72rem”,fontWeight:700,color:C.navy,opacity:0.4}}>{f}</div>
+<div style={{fontWeight:900,color:C.coral,fontSize:“1.1rem”,marginTop:“2px”}}>{k.notes[j]}</div>
+</div>
+))}
+</div>
+<div style={{background:`${C.sand}18`,border:`2px solid ${C.sand}44`,borderRadius:“12px”,padding:“0.75rem 1rem”,marginBottom:“1rem”}}>
+<div style={{fontSize:“0.74rem”,fontWeight:800,color:C.navy,opacity:0.4,marginBottom:“4px”,textTransform:“uppercase”,letterSpacing:“0.06em”}}>🔒 Privat – Randnotiz</div>
+<div style={{fontSize:“0.88rem”,fontWeight:600,color:C.navy}}>{k.privateNote}</div>
+</div>
+<div>
+<div style={{fontSize:“0.78rem”,fontWeight:800,color:C.navy,opacity:0.4,marginBottom:“6px”,textTransform:“uppercase”,letterSpacing:“0.05em”}}>✉️ Feedback an Eltern</div>
+<textarea
+style={{background:C.cream,border:`2px solid ${C.fog}`,borderRadius:“12px”,padding:“10px 14px”,fontSize:“0.88rem”,color:C.navy,width:“100%”,fontFamily:”‘Nunito’,sans-serif”,fontWeight:600,outline:“none”,resize:“vertical”,minHeight:“70px”}}
+placeholder={`Feedback für ${k.name}...`}
+value={i===0?feedbackText:””}
+onChange={i===0?e=>setFeedbackText(e.target.value):undefined}/>
+<button style={{…S.btnPrimary,marginTop:“0.5rem”,padding:“8px 20px”,fontSize:“0.84rem”,background:noteSaved?C.mint:C.coral}} onClick={saveNote}>
+{noteSaved?“✓ Gespeichert!”:“Absenden”}
+</button>
+</div>
+</div>
+))}
+</div>
+{/* CERTIFICATE MODAL */}
+{certFor&&(
+<div style={{position:“fixed”,inset:0,background:“rgba(44,62,90,0.5)”,display:“flex”,alignItems:“center”,justifyContent:“center”,zIndex:500}} onClick={()=>setCertFor(null)}>
+<div style={{background:C.white,borderRadius:“24px”,padding:“2.5rem”,maxWidth:“480px”,width:“90%”,textAlign:“center”,boxShadow:“0 20px 60px rgba(44,62,90,0.25)”,border:`4px solid ${C.sand}`}} onClick={e=>e.stopPropagation()}>
+<div style={{fontSize:“2.8rem”,marginBottom:“0.5rem”}}>🏅</div>
+<div style={{fontSize:“0.82rem”,fontWeight:800,color:C.navy,opacity:0.35,letterSpacing:“0.12em”,textTransform:“uppercase”,marginBottom:“0.5rem”}}>SekStep Zertifikat</div>
+<div style={{fontSize:“1.7rem”,fontWeight:900,color:C.coral,margin:“0.5rem 0”}}>{certFor}</div>
+<div style={{color:C.navy,opacity:0.6,fontWeight:600,lineHeight:1.75,fontSize:“0.92rem”,margin:“1rem 0”}}>
+hat das SekStep-Übertrittsvorbereitungsprogramm 2025/26 erfolgreich abgeschlossen.<br/>
+Wir wünschen dir alles Gute für deinen weiteren Schulweg! 🌟
+</div>
+<div style={{display:“flex”,justifyContent:“space-around”,marginTop:“1.5rem”,paddingTop:“1rem”,borderTop:`2px solid ${C.fog}`}}>
+<div><div style={{fontWeight:900,color:C.coral}}>Fabian Schmidt</div><div style={{fontSize:“0.72rem”,color:C.navy,opacity:0.35,fontWeight:600}}>Pädagoge</div></div>
+<div><div style={{fontWeight:900,color:C.sky}}>Timothy Henry</div><div style={{fontSize:“0.72rem”,color:C.navy,opacity:0.35,fontWeight:600}}>Technologie</div></div>
+</div>
+<button style={{…S.btnPrimary,marginTop:“1.5rem”,width:“100%”}} onClick={()=>setCertFor(null)}>Schliessen</button>
+</div>
+</div>
+)}
+</div>
+);
+
+// ── HOMEPAGE
 return (
-<div style={styles.app}>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<div style={{fontFamily:”‘Nunito’,sans-serif”,background:C.cream,color:C.navy,minHeight:“100vh”,overflowX:“hidden”}}>
 
 ```
   {/* NAV */}
-  <nav style={styles.nav}>
-    <div style={styles.logo}>Bridge21</div>
-    <div style={styles.navLinks}>
-      {["home","program","prices","about"].map(k => (
-        <span key={k} style={styles.navLink}>{t.nav[k]}</span>
+  <nav style={S.nav}>
+    <div>
+      <div style={S.logo}>SekStep</div>
+      <span style={S.logoSub}>by Fabian Schmidt × Timothy Henry</span>
+    </div>
+    <div style={{display:"flex",gap:"0.4rem",alignItems:"center",flexWrap:"wrap"}}>
+      {["home","program","team","prices"].map((sec,i)=>(
+        <button key={sec} style={S.navBtn(false)}
+          onClick={()=>document.getElementById(`sec-${sec}`)?.scrollIntoView({behavior:"smooth"})}>
+          {t.nav[i]}
+        </button>
       ))}
-      <div style={{ display: "flex", gap: "6px" }}>
-        {["de","fr","en"].map(l => (
-          <button key={l} style={styles.langBtn(lang===l)} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
+      <div style={{display:"flex",gap:"4px",marginLeft:"0.4rem"}}>
+        {["de","fr","en"].map(l=>(
+          <button key={l} style={S.langBtn(lang===l)} onClick={()=>setLang(l)}>{l.toUpperCase()}</button>
         ))}
       </div>
-      <button style={styles.loginBtn} onClick={() => setView("dashboard-parent")}>{t.nav.login}</button>
+      <button style={S.loginBtn} onClick={()=>setPage("login")}
+        onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+        onMouseLeave={e=>e.currentTarget.style.transform="none"}>
+        {t.nav[4]}
+      </button>
     </div>
   </nav>
 
-  {view === "home" && (
-    <>
-      {/* HERO */}
-      <section style={styles.hero}>
-        <div style={styles.badge}>{t.hero.badge}</div>
-        <h1 style={styles.h1}>
-          {t.hero.title}<br />
-          <span style={styles.highlight}>{t.hero.titleHighlight}</span>
-        </h1>
-        <p style={styles.heroSub}>{t.hero.sub}</p>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <button style={styles.btnPrimary} onClick={startChat}>{t.hero.cta}<br /><small style={{ fontWeight: 400, fontSize: "0.8rem", opacity: 0.8 }}>{t.hero.ctaSub}</small></button>
-          <button style={styles.btnSecondary} onClick={() => document.getElementById("demo-section").scrollIntoView({ behavior: "smooth" })}>{t.hero.demo}</button>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <div style={styles.statsRow}>
-        {t.stats.map((s, i) => (
-          <div key={i} style={styles.statItem}>
-            <div style={styles.statN}>{s.n}</div>
-            <div style={styles.statLabel}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* HOW IT WORKS */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>{t.howTitle}</h2>
-        <p style={styles.sectionSub}></p>
-        <div style={styles.stepsGrid}>
-          {t.steps.map((s, i) => (
-            <div key={i} style={styles.stepCard}>
-              <div style={styles.stepIcon}>{s.icon}</div>
-              <div style={styles.stepTitle}>{s.title}</div>
-              <div style={styles.stepDesc}>{s.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* SUBJECTS */}
-      <div style={{ ...styles.section, paddingTop: 0 }}>
-        <h2 style={styles.sectionTitle}>{t.subjectTitle}</h2>
-        <p style={{ ...styles.sectionSub, marginBottom: "2rem" }}>Lehrplan 21 · Basel-Stadt</p>
-        <div style={styles.subjectsGrid}>
-          {t.subjects.map((s, i) => (
-            <div key={i} style={styles.subjectPill(s.color)}>
-              <div style={styles.subjectWeight(s.color)}>{s.weight}</div>
-              <div style={styles.subjectName}>{s.name}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* DEMO GAME */}
-      <div id="demo-section" style={styles.section}>
-        <h2 style={styles.sectionTitle}>{t.demoTitle}</h2>
-        <p style={styles.sectionSub}>{t.demoSub}</p>
-        <div style={styles.gameBox}>
-          {gameState === "idle" && (
-            <button style={styles.btnPrimary} onClick={startGame}>{t.demoStart}</button>
-          )}
-          {gameState === "playing" && currentQ && (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                <span>{t.demoScore}: <strong style={{ color: "#4ECDC4" }}>{score}</strong></span>
-                <span style={styles.timer}>{timeLeft}s</span>
-              </div>
-              <div style={styles.gameQ}>{currentQ.question}</div>
-              {feedback && <div style={{ color: feedback === "correct" ? "#4ECDC4" : "#FF6B6B", fontWeight: 700, marginBottom: "0.5rem" }}>{feedback === "correct" ? t.demoCorrect : t.demoWrong}</div>}
-              <div style={styles.gameChoices}>
-                {currentQ.choices.map((c, i) => (
-                  <button key={i} style={styles.gameChoice(feedback, feedback === "wrong" ? null : null, c, currentQ.answer)} onClick={() => !feedback && handleAnswer(c)}>{c}</button>
-                ))}
-              </div>
-            </>
-          )}
-          {gameState === "done" && (
-            <>
-              <div style={{ fontSize: "3rem" }}>🏆</div>
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.demoEnd}</h3>
-              <p style={{ color: "#4ECDC4", fontSize: "1.1rem", fontWeight: 700 }}>{t.demoResult(score)}</p>
-              <button style={{ ...styles.btnPrimary, marginTop: "1rem" }} onClick={startGame}>{t.demoRetry}</button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* PRICES */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>{t.pricesTitle}</h2>
-        <p style={styles.sectionSub}>{t.pricesSub}</p>
-        <div style={styles.plansGrid}>
-          {t.plans.map((p, i) => (
-            <div key={i} style={styles.planCard(p.highlight)}>
-              {p.highlight && <span style={styles.planBadge}>⭐ Top</span>}
-              <div style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.25rem" }}>{p.name}</div>
-              <div style={styles.planPrice}>{p.price}</div>
-              <div style={{ color: "rgba(240,244,255,0.45)", fontSize: "0.85rem", marginBottom: "1.25rem" }}>{p.period}</div>
-              {p.features.map((f, j) => (
-                <div key={j} style={styles.planFeature}><span style={{ color: "#4ECDC4" }}>✓</span>{f}</div>
-              ))}
-              <button style={{ ...styles.btnPrimary, width: "100%", marginTop: "1.5rem", background: p.highlight ? "linear-gradient(135deg,#FF6B35,#FF8C42)" : "rgba(255,255,255,0.1)" }} onClick={startChat}>{p.cta}</button>
-            </div>
-          ))}
-        </div>
-        <div style={styles.examCard}>
-          <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "#96CEB4", marginBottom: "0.5rem" }}>{t.examPlan.name}</div>
-          <div style={{ display: "flex", gap: "2rem", justifyContent: "center", margin: "0.75rem 0" }}>
-            <div><div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.examPlan.group}</div><div style={{ fontSize: "0.8rem", color: "rgba(240,244,255,0.5)" }}>Kleingruppe</div></div>
-            <div><div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{t.examPlan.single}</div><div style={{ fontSize: "0.8rem", color: "rgba(240,244,255,0.5)" }}>Einzeln</div></div>
-          </div>
-          <p style={{ color: "rgba(240,244,255,0.55)", fontSize: "0.88rem" }}>{t.examPlan.desc}</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center", marginTop: "0.75rem" }}>
-            {t.examPlan.features.map((f, i) => <span key={i} style={{ background: "rgba(150,206,180,0.1)", border: "1px solid rgba(150,206,180,0.2)", color: "#96CEB4", padding: "4px 12px", borderRadius: "12px", fontSize: "0.82rem" }}>{f}</span>)}
-          </div>
-        </div>
-      </div>
-
-      {/* ABOUT */}
-      <div style={styles.aboutSection}>
-        <div style={styles.aboutInner}>
-          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>👩‍🏫</div>
-          <h2 style={styles.sectionTitle}>{t.aboutTitle}</h2>
-          <p style={{ color: "rgba(240,244,255,0.6)", lineHeight: 1.8, marginTop: "1.5rem" }}>{t.aboutText}</p>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div style={{ ...styles.section, textAlign: "center" }}>
-        <h2 style={styles.sectionTitle}>{t.chatTitle}</h2>
-        <p style={styles.sectionSub}>{t.chatSub}</p>
-        <button style={styles.btnPrimary} onClick={startChat}>{t.hero.cta}</button>
-      </div>
-    </>
-  )}
-
-  {/* PARENT DASHBOARD */}
-  {view === "dashboard-parent" && (
-    <div style={{ paddingTop: "80px" }}>
-      <div style={styles.section}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>👪 Eltern-Dashboard</h2>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
-            <button style={styles.btnSecondary} onClick={() => setView("dashboard-kid")}>Kind-Ansicht</button>
-            <button style={styles.btnSecondary} onClick={() => setView("backend")}>Lehrer-Backend</button>
-            <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
-          {[["📚","Nächste Session","Di, 14. Jan · 15:00","#FF6B35"],["📊","Aktueller Stand","E-Zug: 68/90 Punkten","#4ECDC4"],["✅","Abgeschlossene Themen","12 von 28","#96CEB4"],["⏱️","Nächste Aufgabe","Brüche · Fällig Freitag","#DDA0DD"]].map(([icon,label,val,color],i)=>(
-            <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}33`, borderRadius: "16px", padding: "1.25rem" }}>
-              <div style={{ fontSize: "1.5rem" }}>{icon}</div>
-              <div style={{ fontSize: "0.82rem", color: "rgba(240,244,255,0.5)", marginTop: "0.5rem" }}>{label}</div>
-              <div style={{ fontWeight: 700, color, marginTop: "0.25rem" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
-            <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>📤 Materialien hochladen</h3>
-            <div style={{ border: "2px dashed rgba(255,107,53,0.3)", borderRadius: "12px", padding: "2rem", textAlign: "center", color: "rgba(240,244,255,0.4)" }}>
-              <div style={{ fontSize: "2rem" }}>📎</div>
-              <p>Test, Hausaufgaben oder Zeugnis hochladen</p>
-              <button style={{ ...styles.btnPrimary, marginTop: "0.75rem", padding: "8px 20px", fontSize: "0.88rem" }}>Datei wählen</button>
-            </div>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
-            <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>🎯 Notensimulator</h3>
-            {[["Mathematik","4.5","3×"],["Deutsch","4.0","3×"],["NMG","5.0","3×"],["Französisch","4.5","1.5×"]].map(([fach,note,gew],i)=>(
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.9rem" }}>
-                <span>{fach}</span>
-                <span style={{ color: "#4ECDC4", fontWeight: 700 }}>{note}</span>
-                <span style={{ color: "rgba(240,244,255,0.4)", fontSize: "0.8rem" }}>{gew}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: "1rem", background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.3)", borderRadius: "8px", padding: "0.75rem", textAlign: "center" }}>
-              <span style={{ color: "#4ECDC4", fontWeight: 700 }}>Hochrechnung: 68.5 Punkte → E-Zug ✓</span>
-            </div>
-          </div>
-        </div>
-        <div style={{ marginTop: "1.25rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
-          <h3 style={{ marginBottom: "1rem", fontWeight: 700 }}>📝 Lehrer-Feedback · Session 3 (2. Jan)</h3>
-          <p style={{ color: "rgba(240,244,255,0.65)", lineHeight: 1.7, fontSize: "0.9rem" }}>Leonie hat heute sehr konzentriert gearbeitet. Bei Brüchen zeigt sie deutliche Fortschritte – die Grundoperationen sitzen nun sicher. Schwerpunkt für die nächsten 2 Wochen: Textaufgaben und das Lesen von Diagrammen in NMG. Die Motivation ist hoch! 🌟</p>
-        </div>
+  {/* HERO */}
+  <section id="sec-home" style={S.hero}>
+    {/* Decorative clouds */}
+    <svg style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice">
+      <ellipse cx="130" cy="90" rx="100" ry="44" fill="white" opacity="0.55"/>
+      <ellipse cx="175" cy="78" rx="65" ry="36" fill="white" opacity="0.55"/>
+      <ellipse cx="85" cy="102" rx="55" ry="28" fill="white" opacity="0.55"/>
+      <ellipse cx="920" cy="130" rx="115" ry="46" fill="white" opacity="0.45"/>
+      <ellipse cx="975" cy="114" rx="72" ry="36" fill="white" opacity="0.45"/>
+      <ellipse cx="862" cy="142" rx="55" ry="26" fill="white" opacity="0.45"/>
+      <ellipse cx="520" cy="55" rx="80" ry="30" fill="white" opacity="0.3"/>
+    </svg>
+    {/* Triangles */}
+    <svg style={{position:"absolute",bottom:"8%",left:"4%",opacity:0.2}} width="130" height="130" viewBox="0 0 100 100"><polygon points="50,5 95,90 5,90" fill={C.coral}/></svg>
+    <svg style={{position:"absolute",bottom:"12%",right:"5%",opacity:0.18}} width="100" height="100" viewBox="0 0 100 100"><polygon points="50,5 95,90 5,90" fill={C.mint}/></svg>
+    <svg style={{position:"absolute",top:"22%",left:"2%",opacity:0.12}} width="75" height="75" viewBox="0 0 100 100"><polygon points="50,5 95,90 5,90" fill={C.sand}/></svg>
+    <div style={{position:"relative",zIndex:2,textAlign:"center"}}>
+      <div style={{fontSize:"0.88rem",fontWeight:800,letterSpacing:"0.14em",color:C.coral,marginBottom:"1.5rem",textTransform:"uppercase"}}>{t.heroEyebrow}</div>
+      <h1 style={{fontSize:"clamp(3.5rem,10vw,7rem)",fontWeight:900,lineHeight:0.95,letterSpacing:"-0.04em",marginBottom:"1.5rem"}}>
+        <span style={{color:C.coral,display:"block"}}>{t.heroWord}</span>
+        <span style={{color:C.navy,display:"block"}}>{t.heroWord2}</span>
+      </h1>
+      <p style={{fontSize:"1.1rem",color:C.navy,opacity:0.68,maxWidth:"560px",lineHeight:1.75,marginBottom:"2.5rem",fontWeight:600,margin:"0 auto 2.5rem"}}>{t.heroSub}</p>
+      <div style={{display:"flex",gap:"1rem",justifyContent:"center",flexWrap:"wrap"}}>
+        <button style={S.btnPrimary} onClick={openChat}
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 14px 34px ${C.coral}66`}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 8px 26px ${C.coral}50`}}>
+          {t.heroCta}
+        </button>
+        <button style={S.btnSec}
+          onClick={()=>document.getElementById("sec-demo")?.scrollIntoView({behavior:"smooth"})}
+          onMouseEnter={e=>e.currentTarget.style.background=C.fog}
+          onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+          {t.heroCta2}
+        </button>
       </div>
     </div>
-  )}
+  </section>
 
-  {/* KID DASHBOARD */}
-  {view === "dashboard-kid" && (
-    <div style={{ paddingTop: "80px" }}>
-      <div style={styles.section}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>🎮 Hallo, Leonie!</h2>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
-            <button style={styles.btnSecondary} onClick={() => setView("dashboard-parent")}>Eltern-Ansicht</button>
-            <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: "1rem", marginBottom: "2rem" }}>
-          {[["🔥","7 Tage Streak!","#FF6B35"],["⭐","42 Punkte","#FFD700"],["🏅","3 Badges","#4ECDC4"],["📅","Nächster Termin","#96CEB4"]].map(([icon,label,color],i)=>(
-            <div key={i} style={{ background: `${color}12`, border: `1.5px solid ${color}33`, borderRadius: "16px", padding: "1.25rem", textAlign: "center" }}>
-              <div style={{ fontSize: "2rem" }}>{icon}</div>
-              <div style={{ fontWeight: 700, color, marginTop: "0.5rem" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "2rem" }}>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
-            <h3 style={{ fontWeight: 700, marginBottom: "1rem" }}>📈 Mein Fortschritt</h3>
-            {[["Mathematik", 72, "#FF6B35"],["Deutsch", 58, "#4ECDC4"],["NMG", 85, "#45B7D1"],["Französisch", 44, "#96CEB4"]].map(([fach,pct,color],i)=>(
-              <div key={i} style={{ marginBottom: "0.75rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem", marginBottom: "4px" }}><span>{fach}</span><span style={{ color, fontWeight: 700 }}>{pct}%</span></div>
-                <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "4px", height: "8px" }}>
-                  <div style={{ background: color, width: `${pct}%`, height: "100%", borderRadius: "4px", transition: "width 1s" }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem" }}>
-            <h3 style={{ fontWeight: 700, marginBottom: "1rem" }}>🎮 Spiele spielen</h3>
-            {[["🏎️","Zahlen-Rennen","Mathe","#FF6B35"],["🔍","Lese-Detektiv","Deutsch","#4ECDC4"],["🌍","Quiz-Battle","NMG","#45B7D1"],["🃏","Vokabel-Memory","Französisch","#96CEB4"]].map(([icon,name,fach,color],i)=>(
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "8px", borderRadius: "8px", marginBottom: "0.5rem", cursor: "pointer", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <span style={{ fontSize: "1.3rem" }}>{icon}</span>
-                <div><div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{name}</div><div style={{ fontSize: "0.78rem", color }}>{fach}</div></div>
-                <span style={{ marginLeft: "auto", color: "rgba(240,244,255,0.4)", fontSize: "0.8rem" }}>▶</span>
-              </div>
-            ))}
-          </div>
-        </div>
+  {/* STATS */}
+  <div style={{display:"flex",justifyContent:"center",background:C.white,borderTop:`3px solid ${C.fog}`,borderBottom:`3px solid ${C.fog}`}}>
+    {t.statsVal.map((v,i)=>(
+      <div key={i} style={{flex:"1 1 120px",textAlign:"center",padding:"1.75rem 1rem",borderRight:i<3?`2px solid ${C.fog}`:"none",maxWidth:"260px"}}>
+        <div style={{fontSize:"2.3rem",fontWeight:900,color:C.coral}}>{v}</div>
+        <div style={{fontSize:"0.78rem",fontWeight:700,color:C.navy,opacity:0.45,marginTop:"4px",textTransform:"uppercase",letterSpacing:"0.06em"}}>{t.statsLabel[i]}</div>
       </div>
-    </div>
-  )}
+    ))}
+  </div>
 
-  {/* TEACHER BACKEND */}
-  {view === "backend" && (
-    <div style={{ paddingTop: "80px" }}>
-      <div style={styles.section}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <h2 style={{ ...styles.sectionTitle, textAlign: "left", marginBottom: 0 }}>🏫 Lehrer-Backend</h2>
-          <button style={{ ...styles.btnSecondary, fontSize: "0.85rem" }} onClick={() => setView("home")}>← Zurück</button>
+  {/* HOW IT WORKS */}
+  <div id="sec-program" style={S.section}>
+    <h2 style={S.secTitle}>{t.howTitle}</h2>
+    <p style={S.secSub}>{t.howSub}</p>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:"1.25rem"}}>
+      {t.steps.map((st,i)=>(
+        <div key={i} style={{background:hovStep===i?C.white:C.cream,border:`2.5px solid ${hovStep===i?C.coral:C.fog}`,borderRadius:"20px",padding:"1.6rem 1.25rem",cursor:"pointer",transition:"all 0.2s",transform:hovStep===i?"translateY(-5px)":"none",boxShadow:hovStep===i?`0 12px 32px ${C.coral}22`:"0 2px 8px rgba(44,62,90,0.05)"}}
+          onMouseEnter={()=>setHovStep(i)} onMouseLeave={()=>setHovStep(null)}>
+          <div style={{fontSize:"2rem",marginBottom:"0.7rem"}}>{st.icon}</div>
+          <div style={{fontWeight:800,marginBottom:"0.4rem",fontSize:"0.97rem",color:C.navy}}>{st.t}</div>
+          <div style={{fontSize:"0.85rem",color:C.navy,opacity:0.58,lineHeight:1.65}}>{st.d}</div>
         </div>
-        {[{name:"Leonie M.", zug:"E→P", fach:"Mathe/Deutsch", next:"14. Jan", progress:72, note:"Brüche verbessert. Textaufgaben noch schwach."},
-          {name:"Noah K.", zug:"A→E", fach:"Alle Fächer", next:"15. Jan", progress:48, note:"Motivation hoch. Deutsch macht grosse Fortschritte."},
-          {name:"Sara B.", zug:"P halten", fach:"NMG/Fr.", next:"16. Jan", progress:88, note:"Sehr selbstständig. Kaum Korrekturbedarf."}
-        ].map((kind,i)=>(
-          <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "1.5rem", marginBottom: "1rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>{kind.name}</div>
-                <div style={{ fontSize: "0.85rem", color: "rgba(240,244,255,0.5)", marginTop: "2px" }}>Ziel: {kind.zug} · Schwerpunkt: {kind.fach} · Nächste Session: {kind.next}</div>
-              </div>
-              <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                <div style={{ background: "rgba(78,205,196,0.15)", border: "1px solid rgba(78,205,196,0.3)", color: "#4ECDC4", padding: "4px 12px", borderRadius: "12px", fontWeight: 700, fontSize: "0.88rem" }}>{kind.progress}% Fortschritt</div>
-                <button style={{ ...styles.btnSecondary, fontSize: "0.82rem", padding: "6px 14px" }}>Feedback schreiben</button>
-              </div>
-            </div>
-            <div style={{ marginTop: "0.75rem", background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "0.75rem", fontSize: "0.88rem", color: "rgba(240,244,255,0.6)" }}>
-              📝 <strong style={{ color: "rgba(240,244,255,0.8)" }}>Randnotiz (privat):</strong> {kind.note}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "0.5rem", marginTop: "0.75rem" }}>
-              {["Mathe","Deutsch","NMG","Französisch"].map((f,j)=>(
-                <div key={j} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "8px", textAlign: "center", fontSize: "0.78rem" }}>
-                  <div style={{ color: "rgba(240,244,255,0.45)" }}>{f}</div>
-                  <div style={{ fontWeight: 700, color: "#4ECDC4", marginTop: "2px" }}>{[4.5,4.0,5.0,4.5][j]}</div>
-                </div>
-              ))}
-            </div>
+      ))}
+    </div>
+  </div>
+
+  {/* SUBJECTS */}
+  <div style={{background:C.white,padding:"80px 2rem"}}>
+    <div style={{maxWidth:"860px",margin:"0 auto"}}>
+      <h2 style={S.secTitle}>{t.subTitle}</h2>
+      <p style={S.secSub}>Lehrplan 21 · Basel-Stadt · Übertrittsgewichtung</p>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"1rem",justifyContent:"center"}}>
+        {t.subjects.map((su,i)=>(
+          <div key={i} style={{background:`${su.c}18`,border:`2.5px solid ${su.c}55`,borderRadius:"16px",padding:"1.25rem 1.6rem",textAlign:"center",minWidth:"138px",transition:"transform 0.2s",cursor:"default"}}
+            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-4px)"}
+            onMouseLeave={e=>e.currentTarget.style.transform="none"}>
+            <div style={{fontSize:"1.7rem"}}>{su.e}</div>
+            <div style={{color:su.c,fontSize:"1.7rem",fontWeight:900}}>{su.w}</div>
+            <div style={{fontWeight:800,fontSize:"0.9rem",marginTop:"4px",color:C.navy}}>{su.n}</div>
           </div>
         ))}
       </div>
     </div>
-  )}
+  </div>
+
+  {/* DEMO GAME */}
+  <div id="sec-demo" style={S.section}>
+    <h2 style={S.secTitle}>{t.demoTitle}</h2>
+    <p style={S.secSub}>{t.demoSub}</p>
+    <div style={{background:C.white,border:`3px solid ${C.fog}`,borderRadius:"24px",padding:"2.5rem",maxWidth:"460px",margin:"0 auto",textAlign:"center",boxShadow:`0 8px 36px ${C.sky}44`}}>
+      {gameState==="idle"&&(
+        <div>
+          <div style={{fontSize:"3rem",marginBottom:"1rem"}}>🏎️</div>
+          <button style={S.btnPrimary} onClick={startGame}>{t.demoStart}</button>
+        </div>
+      )}
+      {gameState==="playing"&&currentQ&&(
+        <>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.5rem"}}>
+            <div style={{fontWeight:800,color:C.mint,fontSize:"1.1rem"}}>⭐ {score}</div>
+            <div style={{fontSize:"2.4rem",fontWeight:900,color:timeLeft<=10?C.rose:C.coral}}>{timeLeft}s</div>
+          </div>
+          <div style={{background:`${C.coral}18`,borderRadius:"8px",height:"7px",marginBottom:"1.5rem",overflow:"hidden"}}>
+            <div style={{background:C.coral,width:`${(timeLeft/30)*100}%`,height:"100%",borderRadius:"8px",transition:"width 1s linear"}}/>
+          </div>
+          <div style={{fontSize:"2.8rem",fontWeight:900,color:C.coral,margin:"1rem 0",letterSpacing:"-0.02em"}}>{currentQ.q} = ?</div>
+          {feedback&&<div style={{fontWeight:900,color:feedback==="ok"?C.mint:C.rose,fontSize:"1.1rem",marginBottom:"0.5rem"}}>{feedback==="ok"?"✓ Richtig!":"✗ Falsch"}</div>}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.75rem"}}>
+            {currentQ.choices.map((c,i)=>(
+              <button key={i} onClick={()=>handleAnswer(c)}
+                style={{background:feedback?(c===currentQ.ans?`${C.mint}33`:`${C.rose}22`):C.cream,border:`2.5px solid ${feedback?(c===currentQ.ans?C.mint:C.rose):C.fog}`,color:C.navy,padding:"13px",borderRadius:"13px",cursor:"pointer",fontWeight:800,fontSize:"1.2rem",transition:"all 0.15s"}}
+                onMouseEnter={e=>{if(!feedback)e.currentTarget.style.background=C.fog}}
+                onMouseLeave={e=>{if(!feedback)e.currentTarget.style.background=C.cream}}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {gameState==="done"&&(
+        <>
+          <div style={{fontSize:"3rem"}}>🏆</div>
+          <h3 style={{fontSize:"1.5rem",fontWeight:900,color:C.navy,margin:"0.5rem 0"}}>{t.demoEnd}</h3>
+          <p style={{fontWeight:800,color:C.coral,fontSize:"1.1rem"}}>+{score} Punkte!</p>
+          {score>=8&&<p style={{color:C.mint,fontWeight:700,fontSize:"0.88rem"}}>🔥 Top Ergebnis!</p>}
+          <button style={{...S.btnPrimary,marginTop:"1.25rem"}} onClick={startGame}>{t.demoRetry}</button>
+        </>
+      )}
+    </div>
+  </div>
+
+  {/* TEAM */}
+  <div id="sec-team" style={{background:C.white,padding:"90px 2rem"}}>
+    <div style={{maxWidth:"900px",margin:"0 auto"}}>
+      <h2 style={S.secTitle}>{t.teamTitle}</h2>
+      <p style={S.secSub}>{t.teamSub}</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"1.5rem"}}>
+        {[["fabian",C.coral,"👨‍🏫"],["timothy",C.sky,"👨‍💻"]].map(([key,col,ico])=>{
+          const p=t[key]; const exp=expandTeam===key;
+          return(
+            <div key={key} style={{background:exp?`${col}10`:C.cream,border:`2.5px solid ${exp?col:C.fog}`,borderRadius:"22px",padding:"1.75rem",cursor:"pointer",transition:"all 0.25s",boxShadow:exp?`0 12px 36px ${col}33`:"0 4px 14px rgba(44,62,90,0.05)"}}
+              onClick={()=>setExpandTeam(exp?null:key)}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:"1rem"}}>
+                <div style={{width:"66px",height:"66px",borderRadius:"50%",background:`linear-gradient(135deg,${col},${col}88)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.9rem",flexShrink:0}}>{ico}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:900,fontSize:"1.2rem",color:C.navy}}>{p.name}</div>
+                  <div style={{color:col,fontWeight:700,fontSize:"0.86rem",marginTop:"2px"}}>{p.role}</div>
+                  <div style={{fontSize:"0.8rem",color:C.navy,opacity:0.42,marginTop:"3px",fontStyle:"italic"}}>{p.tag}</div>
+                </div>
+                <div style={{fontSize:"1.2rem",color:col,fontWeight:900,transition:"transform 0.2s",transform:exp?"rotate(180deg)":"none"}}>▾</div>
+              </div>
+              {exp&&(
+                <div style={{marginTop:"1.25rem",paddingTop:"1.25rem",borderTop:`2px solid ${col}22`}}>
+                  <p style={{color:C.navy,opacity:0.65,lineHeight:1.75,fontSize:"0.88rem",fontWeight:600,marginBottom:"1rem"}}>{p.bio}</p>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+                    {p.facts.map((f,i)=><span key={i} style={S.tag(col)}>{f}</span>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  {/* PRICES */}
+  <div id="sec-prices" style={S.section}>
+    <h2 style={S.secTitle}>{t.priceTitle}</h2>
+    <p style={S.secSub}>{t.priceSub}</p>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:"1.5rem",maxWidth:"680px",margin:"0 auto 2rem"}}>
+      {t.plans.map((pl,i)=>(
+        <div key={i} style={{background:pl.hi?`${C.coral}0E`:C.white,border:`2.5px solid ${hovPlan===i||pl.hi?C.coral:C.fog}`,borderRadius:"22px",padding:"2rem",position:"relative",transition:"all 0.2s",transform:hovPlan===i?"translateY(-4px)":"none",boxShadow:hovPlan===i?`0 12px 34px ${C.coral}22`:"0 4px 14px rgba(44,62,90,0.05)",cursor:"pointer"}}
+          onMouseEnter={()=>setHovPlan(i)} onMouseLeave={()=>setHovPlan(null)} onClick={openChat}>
+          {pl.hi&&<span style={{...S.tag(C.coral),position:"absolute",top:"1rem",right:"1rem"}}>⭐ Top</span>}
+          <div style={{fontWeight:900,fontSize:"1.1rem",color:C.navy,marginBottom:"0.25rem"}}>{pl.name}</div>
+          <div style={{fontSize:"2.3rem",fontWeight:900,color:C.coral,margin:"0.4rem 0"}}>{pl.price}</div>
+          <div style={{color:C.navy,opacity:0.38,fontSize:"0.84rem",fontWeight:700,marginBottom:"1.25rem"}}>{pl.period}</div>
+          {pl.feats.map((f,j)=>(
+            <div key={j} style={{fontSize:"0.86rem",color:C.navy,opacity:0.65,padding:"5px 0",display:"flex",alignItems:"center",gap:"0.5rem",fontWeight:600}}>
+              <span style={{color:C.mint,fontWeight:900}}>✓</span>{f}
+            </div>
+          ))}
+          <button style={{...S.btnPrimary,width:"100%",marginTop:"1.5rem",background:pl.hi?C.coral:C.navy,boxShadow:"none"}}>{t.heroCta}</button>
+        </div>
+      ))}
+    </div>
+    <div style={{background:`${C.mint}18`,border:`2.5px solid ${C.mint}55`,borderRadius:"20px",padding:"2rem",textAlign:"center",maxWidth:"680px",margin:"0 auto"}}>
+      <div style={{fontWeight:900,fontSize:"1.1rem",color:C.mint,marginBottom:"0.75rem"}}>{t.exam.name}</div>
+      <div style={{display:"flex",gap:"2.5rem",justifyContent:"center",margin:"0.75rem 0",flexWrap:"wrap"}}>
+        <div><div style={{fontSize:"1.6rem",fontWeight:900,color:C.navy}}>{t.exam.g}</div><div style={{fontSize:"0.78rem",color:C.navy,opacity:0.4,fontWeight:600}}>{t.exam.gLabel}</div></div>
+        <div><div style={{fontSize:"1.6rem",fontWeight:900,color:C.navy}}>{t.exam.s}</div><div style={{fontSize:"0.78rem",color:C.navy,opacity:0.4,fontWeight:600}}>{t.exam.sLabel}</div></div>
+      </div>
+      <p style={{color:C.navy,opacity:0.55,fontSize:"0.86rem",fontWeight:600}}>{t.exam.d}</p>
+    </div>
+  </div>
 
   {/* FOOTER */}
-  <div style={styles.footer}>{t.footer}</div>
+  <div style={{background:C.navy,color:C.white,textAlign:"center",padding:"2.5rem 2rem"}}>
+    <div style={{fontWeight:900,fontSize:"1.5rem",color:C.coral,marginBottom:"0.3rem"}}>SekStep</div>
+    <div style={{opacity:0.45,fontWeight:600,fontSize:"0.88rem"}}>Fabian Schmidt × Timothy Henry · Basel · 2025</div>
+    <div style={{opacity:0.3,fontWeight:600,fontSize:"0.78rem",marginTop:"0.4rem"}}>Lehrplan 21 · Übertritt 6. Klasse · A/E/P</div>
+  </div>
 
-  {/* CHATBOT */}
-  <button style={styles.chatBtn} onClick={() => chatOpen ? setChatOpen(false) : startChat()}>
-    {chatOpen ? "✕" : "💬"}
+  {/* CHAT BUTTON */}
+  <button style={{position:"fixed",bottom:"1.75rem",right:"1.75rem",zIndex:300,background:C.coral,color:"#fff",border:"none",width:"62px",height:"62px",borderRadius:"50%",fontSize:"1.5rem",cursor:"pointer",boxShadow:`0 8px 26px ${C.coral}55`,display:"flex",alignItems:"center",justifyContent:"center",transition:"transform 0.2s"}}
+    onClick={()=>chatOpen?setChatOpen(false):openChat()}
+    onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+    onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+    {chatOpen?"✕":"💬"}
   </button>
-  {chatOpen && (
-    <div style={styles.chatWindow}>
-      <div style={styles.chatHeader}>
-        <span style={{ fontWeight: 700, color: "#fff" }}>Bridge21 Assistant</span>
-        <button onClick={() => setChatOpen(false)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "1.1rem" }}>✕</button>
+
+  {/* CHAT WINDOW */}
+  {chatOpen&&(
+    <div style={S.chatWin}>
+      <div style={{background:`linear-gradient(135deg,${C.coral},${C.rose})`,padding:"1rem 1.25rem",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div>
+          <div style={{fontWeight:900,color:"#fff",fontSize:"0.97rem"}}>SekStep Assistent</div>
+          <div style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.75)",fontWeight:600}}>Built by Timothy · Guided by Fabian</div>
+        </div>
+        <button onClick={()=>setChatOpen(false)} style={{background:"none",border:"none",color:"#fff",cursor:"pointer",fontSize:"1.2rem",fontWeight:900,lineHeight:1}}>✕</button>
       </div>
-      <div style={styles.chatBody}>
-        {chatHistory.map((msg, i) => (
-          <div key={i} style={msg.role === "bot" ? styles.chatBotMsg : styles.chatUserMsg}>{msg.text}</div>
+      <div style={{flex:1,overflowY:"auto",padding:"1rem",display:"flex",flexDirection:"column",gap:"0.75rem",maxHeight:"300px"}}>
+        {chatHistory.map((m,i)=>(
+          <div key={i} style={m.r==="bot"?{background:C.fog,borderRadius:"14px 14px 14px 4px",padding:"0.75rem 1rem",fontSize:"0.86rem",lineHeight:1.6,maxWidth:"90%",color:C.navy,fontWeight:600,whiteSpace:"pre-line"}:{background:`${C.coral}20`,borderRadius:"14px 14px 4px 14px",padding:"0.75rem 1rem",fontSize:"0.86rem",alignSelf:"flex-end",maxWidth:"80%",color:C.navy,fontWeight:700}}>
+            {m.text}
+          </div>
         ))}
+        <div ref={chatEndRef}/>
       </div>
-      {lastBot?.options && chatStep < CHAT_FLOWS[lang].length - 1 && (
-        <div style={styles.chatOptions}>
-          {lastBot.options.map((opt, i) => (
-            <button key={i} style={styles.chatOption} onClick={() => handleChatOption(opt)}>{opt}</button>
-          ))}
-        </div>
-      )}
-      {chatStep >= CHAT_FLOWS[lang].length - 1 && lastBot?.options && (
-        <div style={styles.chatOptions}>
-          {lastBot.options.map((opt, i) => (
-            <button key={i} style={styles.chatOption} onClick={() => setChatOpen(false)}>{opt}</button>
-          ))}
-        </div>
-      )}
+      <div style={{display:"flex",flexWrap:"wrap",gap:"0.5rem",padding:"0.75rem 1rem",borderTop:`2px solid ${C.fog}`}}>
+        {chatDone?(
+          t.chatDone.map((o,i)=>(
+            <button key={i} style={{background:`${C.coral}15`,border:`1.5px solid ${C.coral}44`,color:C.coral,padding:"6px 13px",borderRadius:"16px",cursor:"pointer",fontSize:"0.8rem",fontWeight:700,transition:"background 0.15s"}}
+              onClick={()=>setChatOpen(false)}>{o}</button>
+          ))
+        ):(
+          lastBot?.opts?.map((o,i)=>(
+            <button key={i} style={{background:`${C.coral}15`,border:`1.5px solid ${C.coral}44`,color:C.coral,padding:"6px 13px",borderRadius:"16px",cursor:"pointer",fontSize:"0.8rem",fontWeight:700,transition:"background 0.15s"}}
+              onMouseEnter={e=>e.currentTarget.style.background=`${C.coral}30`}
+              onMouseLeave={e=>e.currentTarget.style.background=`${C.coral}15`}
+              onClick={()=>chatChoose(o)}>{o}</button>
+          ))
+        )}
+      </div>
     </div>
   )}
 </div>
@@ -689,3 +793,10 @@ return (
 
 );
 }
+
+const root = ReactDOM.createRoot(document.getElementById(“root”));
+root.render(<App/>);
+</script>
+
+</body>
+</html>
